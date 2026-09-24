@@ -308,11 +308,29 @@ Linting:
 7. `robots/autonomous/loop.py` — Sense→Plan→Critique→Act→Learn cycle
 8. `robots/evidence/package.py` — EvidencePackage + ADR + Observability + Rollback
 
+### Fallback Matrix (External Tools)
+
+When optional external tools are absent, the system gracefully degrades to stdlib-only fallbacks.
+All fallbacks are explicit and never return fake success.
+
+| Tool | Purpose | Detection | Fallback When Absent | Status Returned |
+|------|---------|-----------|----------------------|-----------------|
+| **comby** | Semantic patching (pattern-based changes) | `comby -version` | Builtin simple string replace (`_apply_builtin`) with preview diff, no semantic matching | `success=True` with `errors=["Built-in patcher used; install comby for semantic matching"]` |
+| **spatch** (coccinelle) | Coccinelle semantic patches for C/Python | `spatch --version` | Builtin string replace (same as comby fallback) | `success=True` with limited matching, preview only |
+| **libcst** | AST structural rewrites (extract, rename, move) | `importlib.util.find_spec("libcst")` | Builtin `ast` module limited rewriter + `ruff` check, returns `success=False` with `errors=["Built-in rewriter limited; install libcst for full refactoring support"]` | `status="unsupported"` when no backend |
+| **TLC** (TLA+) | Model checking TLA+ specs | `tlc -version` | Builtin returns `ModelCheckResult(success=False, errors=["No model checker available; install TLC (TLA+) or Alloy"])` | `status="unsupported"`, never fake success |
+| **Alloy** | Model checking Alloy specs | `alloy --version` | Same as TLC — builtin error, explicit unsupported | `status="unsupported"` |
+| **mutmut** | Mutation testing | `mutmut --version` or import check | Builtin mutation engine (simple operator replacement) | `mutation_score` from builtin, lower accuracy |
+| **Hypothesis** | Property-based testing | `find_spec("hypothesis")` | Builtin deterministic generator (100 random cases) | `success` with fewer properties |
+| **ruff** | Lint/format for rewrites | `ruff --version` | Builtin `ast` only, no formatting | `success=False` if needed |
+
+**Design Principle**: All tooling failures are explicit — `status="unsupported"` or `status="blocked"` or `status="skipped"` with reason, never `success=True` when backend missing. This ensures evidence honesty.
+
 ### Known Limitations
-- Mutation testing requires `mutmut` install (gracefully degrades)
-- Model checking requires `tlc` (TLA+) or `alloy` (gracefully degrades)
-- Semantic patching requires `comby` (gracefully degrades to builtin string replace)
-- Cryptographic signing is placeholder (SHA256 hash)
+- Mutation testing requires `mutmut` install (gracefully degrades to builtin)
+- Model checking requires `tlc` (TLA+) or `alloy` (gracefully degrades to explicit unsupported)
+- Semantic patching requires `comby` or `spatch` (gracefully degrades to builtin string replace)
+- AST rewrite requires `libcst` (gracefully degrades to builtin limited rewriter)
 - Coupling analyzer requires git repo (works without but limited)
 - Autonomous continuous mode runs single test cycle then exits (scheduler needs daemonization)
 

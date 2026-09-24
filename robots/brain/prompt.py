@@ -71,44 +71,45 @@ def build_prompt(
     chunks = rag_chunks or []
     summary = intelligence_summary or {}
     if tier == TIER_1_LOCAL:
-        body = "\n".join([
-            f"<context budget={int(budget)}>",
-            _render_chunks(chunks, _CHUNK_CHARS_TIER_1, include_text=True),
-            "</context>",
-            f"<task>{task}</task>",
-            f"<summary>{json.dumps(summary, ensure_ascii=False)[:800]}</summary>",
-            "<contract>",
-            f"Respond with JSON ONLY matching this schema: {PLAN_CONTRACT}",
-            _EDIT_GUIDE,
-            "</contract>",
-        ])
+        body = "\n".join(
+            [
+                f"<context budget={int(budget)}>",
+                _render_chunks(chunks, _CHUNK_CHARS_TIER_1, include_text=True),
+                "</context>",
+                f"<task>{task}</task>",
+                f"<summary>{json.dumps(summary, ensure_ascii=False)[:800]}</summary>",
+                "<contract>",
+                f"Respond with JSON ONLY matching this schema: {PLAN_CONTRACT}",
+                _EDIT_GUIDE,
+                "</contract>",
+            ]
+        )
         return body
     graph_lines = []
     for chunk in chunks:
-        graph_lines.append(
-            f"- `{chunk.get('path', '?')}` {chunk.get('symbol', '?')} "
-            f"(rrf={chunk.get('rrf', '?')})"
-        )
-    return "\n".join([
-        "# Autonomous Repair Plan",
-        "",
-        "## Task",
-        task,
-        "",
-        "## Repository Summary",
-        json.dumps(summary, ensure_ascii=False, indent=2)[:2000],
-        "",
-        "## Relevant Code (retrieval trace)",
-        *(graph_lines or ["- (no retrieval hits)"]),
-        "",
-        "## Retrieved Context",
-        _render_chunks(chunks, _CHUNK_CHARS_RICH, include_text=True) or "(none)",
-        "",
-        "## Contract",
-        "Reason step by step about root cause, blast radius, and verification. "
-        f"Then emit a final JSON object matching: {PLAN_CONTRACT}",
-        _EDIT_GUIDE,
-    ])
+        graph_lines.append(f"- `{chunk.get('path', '?')}` {chunk.get('symbol', '?')} (rrf={chunk.get('rrf', '?')})")
+    return "\n".join(
+        [
+            "# Autonomous Repair Plan",
+            "",
+            "## Task",
+            task,
+            "",
+            "## Repository Summary",
+            json.dumps(summary, ensure_ascii=False, indent=2)[:2000],
+            "",
+            "## Relevant Code (retrieval trace)",
+            *(graph_lines or ["- (no retrieval hits)"]),
+            "",
+            "## Retrieved Context",
+            _render_chunks(chunks, _CHUNK_CHARS_RICH, include_text=True) or "(none)",
+            "",
+            "## Contract",
+            "Reason step by step about root cause, blast radius, and verification. "
+            f"Then emit a final JSON object matching: {PLAN_CONTRACT}",
+            _EDIT_GUIDE,
+        ]
+    )
 
 
 def extract_json(raw: str) -> dict | None:

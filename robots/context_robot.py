@@ -39,18 +39,18 @@ def _scope_rows(paths: list[str], config: dict, task: str) -> list[dict]:
             if not any(match_any(path, patterns) for path in paths):
                 continue
         else:
-            keywords = {
-                str(item).lower() for item in raw_scope.get("keywords", [])
-            }
+            keywords = {str(item).lower() for item in raw_scope.get("keywords", [])}
             keywords.update(TASK_ALIASES.get(name.lower(), {name.lower()}))
             if not task_words.intersection(keywords):
                 continue
-        rows.append({
-            "name": name,
-            "readFirst": [str(item) for item in raw_scope.get("readFirst", [])],
-            "checks": [str(item) for item in raw_scope.get("checks", [])],
-            "invariants": [str(item) for item in raw_scope.get("invariants", [])],
-        })
+        rows.append(
+            {
+                "name": name,
+                "readFirst": [str(item) for item in raw_scope.get("readFirst", [])],
+                "checks": [str(item) for item in raw_scope.get("checks", [])],
+                "invariants": [str(item) for item in raw_scope.get("invariants", [])],
+            }
+        )
     return rows
 
 
@@ -61,10 +61,7 @@ def _ownership_docs(
     config: dict,
 ) -> list[str]:
     max_bytes = int(config["limits"]["maxFileBytes"])
-    task_words = {
-        word for word in task.lower().replace("/", " ").replace("-", " ").split()
-        if len(word) >= 3
-    }
+    task_words = {word for word in task.lower().replace("/", " ").replace("-", " ").split() if len(word) >= 3}
     matched = []
     for document in tracked_files(project, config):
         if document.suffix.lower() != ".md":
@@ -90,15 +87,9 @@ def build(project: Path, task: str = "", budget: int | None = None) -> tuple[dic
     changes = changed_files(project, config)
     changed_paths = [item["path"] for item in changes]
     scopes = _scope_rows(changed_paths, config, task)
-    read_first = [
-        path for path in config.get("readFirst", [])
-        if (project / path).is_file()
-    ]
+    read_first = [path for path in config.get("readFirst", []) if (project / path).is_file()]
     for scope in scopes:
-        read_first.extend(
-            path for path in scope["readFirst"]
-            if (project / path).is_file()
-        )
+        read_first.extend(path for path in scope["readFirst"] if (project / path).is_file())
     read_first.extend(_ownership_docs(project, changed_paths, task, config))
     read_first = list(dict.fromkeys(read_first))
     selected = list(dict.fromkeys((*changed_paths, *read_first)))
@@ -116,28 +107,34 @@ def build(project: Path, task: str = "", budget: int | None = None) -> tuple[dic
         token_estimate = max(1, size // 4)
         # Secrets/keys are never first-read: counted by marker, on-demand only.
         if is_secret_path(relative):
-            selected_rows.append({
-                "path": secret_marker(relative),
-                "bytes": size,
-                "estimatedTokens": token_estimate,
-                "open": "on-demand",
-            })
+            selected_rows.append(
+                {
+                    "path": secret_marker(relative),
+                    "bytes": size,
+                    "estimatedTokens": token_estimate,
+                    "open": "on-demand",
+                }
+            )
             continue
         if selected_rows and estimated + token_estimate > token_budget:
-            selected_rows.append({
+            selected_rows.append(
+                {
+                    "path": relative,
+                    "bytes": size,
+                    "estimatedTokens": token_estimate,
+                    "open": "on-demand",
+                }
+            )
+            continue
+        estimated += token_estimate
+        selected_rows.append(
+            {
                 "path": relative,
                 "bytes": size,
                 "estimatedTokens": token_estimate,
-                "open": "on-demand",
-            })
-            continue
-        estimated += token_estimate
-        selected_rows.append({
-            "path": relative,
-            "bytes": size,
-            "estimatedTokens": token_estimate,
-            "open": "first",
-        })
+                "open": "first",
+            }
+        )
 
     markers = []
     for change in changes:
@@ -149,29 +146,30 @@ def build(project: Path, task: str = "", budget: int | None = None) -> tuple[dic
             stripped = line.strip()
             marker = comment_marker(line, path.suffix)
             if stripped.startswith(("<<<<<<<", "=======", ">>>>>>>")) or marker:
-                markers.append({
-                    "path": change["path"],
-                    "line": number,
-                    "text": stripped[:160],
-                })
+                markers.append(
+                    {
+                        "path": change["path"],
+                        "line": number,
+                        "text": stripped[:160],
+                    }
+                )
                 if len(markers) >= int(limits["maxFindings"]):
                     break
 
     all_checks = auto_checks(project, config)
-    routed_checks = list(dict.fromkeys(
-        check
-        for scope in scopes
-        for check in scope["checks"]
-        if check in all_checks
-    ))
+    routed_checks = list(dict.fromkeys(check for scope in scopes for check in scope["checks"] if check in all_checks))
     if not routed_checks and not changed_paths and not task:
         routed_checks = ["diff"] if "diff" in all_checks else []
     elif not routed_checks:
         routed_checks = list(all_checks)[:4]
-    invariants = list(dict.fromkeys((
-        *[str(item) for item in config.get("invariants", [])],
-        *(item for scope in scopes for item in scope["invariants"]),
-    )))
+    invariants = list(
+        dict.fromkeys(
+            (
+                *[str(item) for item in config.get("invariants", [])],
+                *(item for scope in scopes for item in scope["invariants"]),
+            )
+        )
+    )
     # RAG enrichment (fail-open, strictly within remaining budget).
     rag_info: dict = {"hits": [], "firstTokens": 0, "stale": True}
     try:
@@ -240,9 +238,6 @@ def build(project: Path, task: str = "", budget: int | None = None) -> tuple[dic
             if hit.get("open") == "first":
                 lines.append(f"- `{hit['path']}:{hit['start']}-{hit['end']}` {hit['symbol']}")
     lines.extend(("", "## Context rule", ""))
-    lines.append(
-        "Open on-demand files only when a finding requires them; "
-        "never preload directories."
-    )
+    lines.append("Open on-demand files only when a finding requires them; never preload directories.")
     markdown_path = write_markdown(project, "context", "latest.md", "\n".join(lines))
     return payload, json_path, markdown_path

@@ -23,17 +23,44 @@ from .docs_robot import inspect as inspect_docs
 from .hygiene_robot import inspect as inspect_hygiene
 
 CODE_SUFFIXES = {
-    ".c", ".cc", ".cpp", ".go", ".h", ".hpp", ".java", ".js", ".jsx",
-    ".mjs", ".py", ".rs", ".ts", ".tsx",
+    ".c",
+    ".cc",
+    ".cpp",
+    ".go",
+    ".h",
+    ".hpp",
+    ".java",
+    ".js",
+    ".jsx",
+    ".mjs",
+    ".py",
+    ".rs",
+    ".ts",
+    ".tsx",
 }
 UI_PATTERNS = (
-    "src/pages/**", "src/components/**", "src/ui/**", "src/styles/**",
-    "app/**", "pages/**", "components/**", "styles/**", "*.css",
+    "src/pages/**",
+    "src/components/**",
+    "src/ui/**",
+    "src/styles/**",
+    "app/**",
+    "pages/**",
+    "components/**",
+    "styles/**",
+    "*.css",
 )
 RELEASE_PATTERNS = (
-    "Dockerfile", "docker/**", ".github/**", ".gitlab-ci.yml",
-    "scripts/release/**", "scripts/deploy/**", "scripts/package*",
-    "public/sw.*", "package-lock.json", "pnpm-lock.yaml", "yarn.lock",
+    "Dockerfile",
+    "docker/**",
+    ".github/**",
+    ".gitlab-ci.yml",
+    "scripts/release/**",
+    "scripts/deploy/**",
+    "scripts/package*",
+    "public/sw.*",
+    "package-lock.json",
+    "pnpm-lock.yaml",
+    "yarn.lock",
 )
 
 
@@ -47,10 +74,7 @@ def _configured_route_checks(paths: list[str], config: dict, available: dict) ->
         patterns = [str(item) for item in route.get("patterns", [])]
         if paths and not any(match_any(path, patterns) for path in paths):
             continue
-        selected.extend(
-            str(name) for name in route.get("checks", [])
-            if str(name) in available
-        )
+        selected.extend(str(name) for name in route.get("checks", []) if str(name) in available)
     return list(dict.fromkeys(selected))
 
 
@@ -97,9 +121,15 @@ def build_plan(
         ui_changed = any(match_any(path, UI_PATTERNS) for path in paths)
         release_changed = any(match_any(path, RELEASE_PATTERNS) for path in paths)
         manifest_changed = any(
-            Path(path).name in {
-                "package.json", "pyproject.toml", "Cargo.toml", "go.mod",
-                "package-lock.json", "pnpm-lock.yaml", "yarn.lock",
+            Path(path).name
+            in {
+                "package.json",
+                "pyproject.toml",
+                "Cargo.toml",
+                "go.mod",
+                "package-lock.json",
+                "pnpm-lock.yaml",
+                "yarn.lock",
             }
             for path in paths
         )
@@ -121,34 +151,30 @@ def build_plan(
                     selected.append(found)
     selected = list(dict.fromkeys(name for name in selected if name in available))
 
-    python_paths = [
-        path for path in paths
-        if path.endswith(".py") and (project / path).is_file()
-    ]
+    python_paths = [path for path in paths if path.endswith(".py") and (project / path).is_file()]
     if full and not python_paths:
         python_paths = [
             path.relative_to(project).as_posix()
             for path in tracked_files(project, config)
             if path.suffix.lower() == ".py"
         ][:200]
-    commands = [
-        {"name": name, "argv": available[name]}
-        for name in selected
-    ]
+    commands = [{"name": name, "argv": available[name]} for name in selected]
     if python_paths:
-        commands.append({
-            "name": "python-syntax",
-            "argv": [
-                "python3",
-                "-c",
-                (
-                    "import pathlib,sys;"
-                    "[compile(pathlib.Path(p).read_text(encoding='utf-8'),p,'exec') "
-                    "for p in sys.argv[1:]]"
-                ),
-                *python_paths[:200],
-            ],
-        })
+        commands.append(
+            {
+                "name": "python-syntax",
+                "argv": [
+                    "python3",
+                    "-c",
+                    (
+                        "import pathlib,sys;"
+                        "[compile(pathlib.Path(p).read_text(encoding='utf-8'),p,'exec') "
+                        "for p in sys.argv[1:]]"
+                    ),
+                    *python_paths[:200],
+                ],
+            }
+        )
     return {
         "project": str(project),
         "configSource": config_source,
@@ -198,9 +224,7 @@ def execute(project: Path, plan: dict) -> tuple[dict, Path]:
             "passed": docs["ok"],
             "returnCode": 0 if docs["ok"] else 1,
             "durationSeconds": 0,
-            "outputTail": [
-                f"errors={docs['summary']['errors']} warnings={docs['summary']['warnings']}"
-            ],
+            "outputTail": [f"errors={docs['summary']['errors']} warnings={docs['summary']['warnings']}"],
         },
         {
             "name": "hygiene-robot",
@@ -208,15 +232,10 @@ def execute(project: Path, plan: dict) -> tuple[dict, Path]:
             "passed": hygiene["ok"],
             "returnCode": 0 if hygiene["ok"] else 1,
             "durationSeconds": 0,
-            "outputTail": [
-                f"errors={hygiene['summary']['errors']} warnings={hygiene['summary']['warnings']}"
-            ],
+            "outputTail": [f"errors={hygiene['summary']['errors']} warnings={hygiene['summary']['warnings']}"],
         },
     ]
-    results.extend(
-        _command_result(project, row["name"], row["argv"], config)
-        for row in plan["commands"]
-    )
+    results.extend(_command_result(project, row["name"], row["argv"], config) for row in plan["commands"])
     after = source_state(project, config)
     stable = before == after
     payload = {
@@ -239,8 +258,5 @@ def compact_plan(plan: dict) -> dict:
         "changedFiles": len(plan["changed"]),
         "full": plan["full"],
         "browser": plan["includeBrowser"],
-        "commands": [
-            {"name": item["name"], "command": shlex.join(item["argv"])}
-            for item in plan["commands"]
-        ],
+        "commands": [{"name": item["name"], "command": shlex.join(item["argv"])} for item in plan["commands"]],
     }

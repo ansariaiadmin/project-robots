@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
+from pathlib import Path
 
 from .static_reachability import ReachabilityResult
 from .mutation_engine import MutationResult
@@ -14,6 +14,7 @@ from .contract_diff import ContractDiffResult
 @dataclass(slots=True)
 class RiskScore:
     """Complete risk score with breakdown."""
+
     overall: float  # 0.0 - 1.0
     reachability: float
     coupling: float
@@ -21,7 +22,7 @@ class RiskScore:
     contract_breakage: float
     performance_regression: float
     details: dict = field(default_factory=dict)
-    
+
     def to_dict(self) -> dict:
         return {
             "overall": self.overall,
@@ -38,7 +39,7 @@ class RiskScore:
 
 class RiskScorer:
     """Computes multi-factor risk score for changes."""
-    
+
     # Weights for each factor (must sum to 1.0)
     WEIGHTS = {
         "reachability": 0.35,
@@ -47,20 +48,20 @@ class RiskScorer:
         "contract_breakage": 0.15,
         "performance_regression": 0.05,
     }
-    
+
     # Thresholds for auto-apply / review / reject
     THRESHOLDS = {
         "auto_apply": 0.15,
         "fast_track": 0.30,
         "full_review": 0.50,
     }
-    
+
     def __init__(self, config: dict):
         self.config = config
         impact_config = config.get("impact", {})
         self.weights = impact_config.get("risk_weights", self.WEIGHTS)
         self.thresholds = impact_config.get("risk_thresholds", self.THRESHOLDS)
-    
+
     def score(
         self,
         reachability: ReachabilityResult,
@@ -71,35 +72,35 @@ class RiskScorer:
         performance_delta: float | None = None,
     ) -> RiskScore:
         """Compute overall risk score."""
-        
+
         # 1. Reachability score (0-1): fraction of codebase affected
         total_files = len(reachability.affected_files) + len(coupling_impact)
         reachability_score = min(total_files / 100.0, 1.0)  # Normalize to 100 files
-        
+
         # 2. Coupling score (0-1): max coupling impact
         coupling_score = max(coupling_impact.values()) if coupling_impact else 0.0
-        
+
         # 3. Mutation survival score (0-1): 1 - mutation_score
         mutation_survival = 1.0 - mutation.mutation_score if mutation.total_mutants > 0 else 0.5
-        
+
         # 4. Contract breakage score (0-1): from contract diff
         contract_breakage = contract_diff.risk_score
-        
+
         # 5. Performance regression (0-1): from benchmarks
         performance_regression = 0.0
         if performance_delta is not None:
             # Positive delta = slower = bad
             performance_regression = min(max(performance_delta, 0.0), 1.0)
-        
+
         # Weighted overall score
         overall = (
-            self.weights["reachability"] * reachability_score +
-            self.weights["coupling"] * coupling_score +
-            self.weights["mutation_survival"] * mutation_survival +
-            self.weights["contract_breakage"] * contract_breakage +
-            self.weights["performance_regression"] * performance_regression
+            self.weights["reachability"] * reachability_score
+            + self.weights["coupling"] * coupling_score
+            + self.weights["mutation_survival"] * mutation_survival
+            + self.weights["contract_breakage"] * contract_breakage
+            + self.weights["performance_regression"] * performance_regression
         )
-        
+
         details = {
             "total_affected_files": total_files,
             "blast_radius": reachability.blast_radius,
@@ -113,7 +114,7 @@ class RiskScorer:
             "property_tests_failed": property_result.failed if property_result else 0,
             "performance_delta": performance_delta,
         }
-        
+
         return RiskScore(
             overall=overall,
             reachability=reachability_score,
@@ -123,11 +124,11 @@ class RiskScorer:
             performance_regression=performance_regression,
             details=details,
         )
-    
+
     def get_decision(self, risk_score: RiskScore) -> str:
         """Get deployment decision based on risk score."""
         overall = risk_score.overall
-        
+
         if overall < self.thresholds["auto_apply"]:
             return "auto_apply"
         elif overall < self.thresholds["fast_track"]:
@@ -136,7 +137,7 @@ class RiskScorer:
             return "full_review"
         else:
             return "reject"
-    
+
     def get_thresholds(self) -> dict:
         return self.thresholds.copy()
 
@@ -153,7 +154,4 @@ def compute_risk_score(
 ) -> RiskScore:
     """Convenience function to compute risk score."""
     scorer = RiskScorer(config)
-    return scorer.score(
-        reachability, coupling_impact, mutation, contract_diff,
-        property_result, performance_delta
-    )
+    return scorer.score(reachability, coupling_impact, mutation, contract_diff, property_result, performance_delta)

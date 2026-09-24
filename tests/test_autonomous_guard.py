@@ -229,7 +229,12 @@ class LoopGuardTests(unittest.TestCase):
         config, _ = load_config(self.project)
         robot = AutonomousRobot(AutonomousConfig(max_cycles=2, issue_queue=["tidy"]))
         result = robot.run_cycle(self.project, config, "tidy")
-        self.assertTrue(result.success)
+        # TASK #5: Throttle shallow success — when checks skipped due to shallow depth,
+        # success=True forbidden, explicit SKIPPED status expected
+        # Offline mock provider uses tier-1-local with shallow verification
+        self.assertFalse(result.success)
+        self.assertIn("SKIPPED", str(result.error))
+        self.assertEqual(result.plan.get("verification_status", {}).get("status"), "SKIPPED")
         self.assertEqual(result.plan.get("brain", {}).get("provider"), "mock")
         self.assertFalse((self.project / ".project-robots").exists())
         status = subprocess.run(
@@ -273,9 +278,13 @@ class LoopGuardTests(unittest.TestCase):
         config["autonomous"] = {"mode": "default", "issue": "singular issue", "max_cycles": 2}
         robot = AutonomousMainRobot()
         result = robot.inspect(self.project, config)
-        self.assertTrue(result.ok)
+        # TASK #5: With shallow verification, cycles may return SKIPPED not success,
+        # but inspect should still complete and track issues. ok may be False if SKIPPED
+        # We check that singular issue is respected regardless of success
         issues = [r["issue"] for r in result.metadata["results"]]
         self.assertEqual(issues, ["singular issue"])
+        # At least one cycle completed
+        self.assertGreaterEqual(result.summary.get("cycles_completed", 0), 1)
 
 
 if __name__ == "__main__":

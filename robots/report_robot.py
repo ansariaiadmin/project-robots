@@ -66,10 +66,7 @@ def build(project: Path, task: str = "", budget: int | None = None) -> tuple[dic
     if not blockers:
         lines.append("- None.")
     lines.extend(("", "## Next checks", ""))
-    lines.extend(
-        f"- `{item['name']}` — `{item['command']}`"
-        for item in plan["commands"]
-    )
+    lines.extend(f"- `{item['name']}` — `{item['command']}`" for item in plan["commands"])
     if not plan["commands"]:
         lines.append("- No changed-file check required.")
     markdown_path = write_markdown(project, "report", "latest.md", "\n".join(lines))

@@ -116,7 +116,8 @@ def estimate_cost_usd(tokens_in: int, tokens_out: int, rate_per_mtok: float = 0.
 
 
 def estimate_energy_usd(
-    latency_ms: int, cpu_watts: float = CPU_WATTS_DEFAULT,
+    latency_ms: int,
+    cpu_watts: float = CPU_WATTS_DEFAULT,
     energy_rate: float = ENERGY_USD_PER_KWH,
 ) -> float:
     """Local CPU energy cost for an event (estimate, never metered)."""
@@ -181,10 +182,18 @@ def record_event(
                 " VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (
                     dt.datetime.now(dt.timezone.utc).isoformat(),
-                    str(kind)[:32], str(project)[:256], str(model)[:128],
-                    str(tier)[:32], str(issue)[:512], 1 if success else 0,
-                    int(latency_ms), int(tokens_in), int(tokens_out),
-                    float(est_cost_usd), float(value_usd), int(lines_changed),
+                    str(kind)[:32],
+                    str(project)[:256],
+                    str(model)[:128],
+                    str(tier)[:32],
+                    str(issue)[:512],
+                    1 if success else 0,
+                    int(latency_ms),
+                    int(tokens_in),
+                    int(tokens_out),
+                    float(est_cost_usd),
+                    float(value_usd),
+                    int(lines_changed),
                     str(note)[:1024],
                 ),
             )
@@ -212,15 +221,11 @@ def summary(db: Path | None = None) -> dict:
             lines = con.execute("SELECT SUM(lines_changed) FROM events").fetchone()[0] or 0
             by_tier = {
                 row[0]: {"events": row[1], "successes": row[2]}
-                for row in con.execute(
-                    "SELECT tier, COUNT(*), SUM(success) FROM events GROUP BY tier"
-                ).fetchall()
+                for row in con.execute("SELECT tier, COUNT(*), SUM(success) FROM events GROUP BY tier").fetchall()
             }
             by_kind = {
                 row[0]: {"events": row[1], "successes": row[2]}
-                for row in con.execute(
-                    "SELECT kind, COUNT(*), SUM(success) FROM events GROUP BY kind"
-                ).fetchall()
+                for row in con.execute("SELECT kind, COUNT(*), SUM(success) FROM events GROUP BY kind").fetchall()
             }
             return {
                 "events": total,

@@ -27,9 +27,7 @@ _SENSITIVE_NAME = re.compile(r"(?i)(api[_-]?key|secret|token|passwd|password|pri
 
 _ENV_ASSIGN = re.compile(r"(?m)^(\s*(?:export\s+)?[A-Za-z_][A-Za-z0-9_]*\s*=\s*)(.+?)(\s*)$")
 
-_PEM_BLOCK = re.compile(
-    r"-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z0-9 ]*PRIVATE KEY-----"
-)
+_PEM_BLOCK = re.compile(r"-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z0-9 ]*PRIVATE KEY-----")
 
 _TOKEN_RES = (
     re.compile(r"sk-[A-Za-z0-9]{8,}"),

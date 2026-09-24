@@ -11,6 +11,7 @@ from pathlib import Path
 @dataclass(slots=True)
 class RewriteResult:
     """Result of AST rewrite."""
+
     success: bool
     files_changed: int
     changes: list[dict]
@@ -32,9 +33,10 @@ class ASTRewriter:
 
     def _check_libcst(self) -> bool:
         try:
-            import libcst
-            return True
-        except ImportError:
+            import importlib.util
+
+            return importlib.util.find_spec("libcst") is not None
+        except Exception:
             return False
 
     def _check_ruff(self) -> bool:
@@ -99,9 +101,7 @@ class ASTRewriter:
             changes=[{"type": "extract_class", "file": str(file_path), "details": params}],
         )
 
-    def _rename_libcst(
-        self, source: str, file_path: Path, params: dict, dry_run: bool = False
-    ) -> RewriteResult:
+    def _rename_libcst(self, source: str, file_path: Path, params: dict, dry_run: bool = False) -> RewriteResult:
         """Rename symbol using libcst (dry_run returns a diff preview)."""
         import libcst as cst
 
@@ -110,8 +110,10 @@ class ASTRewriter:
 
         if not old_name or not new_name:
             return RewriteResult(
-                success=False, files_changed=0,
-                changes=[], errors=["Missing old_name or new_name"],
+                success=False,
+                files_changed=0,
+                changes=[],
+                errors=["Missing old_name or new_name"],
             )
 
         class RenameTransformer(cst.CSTTransformer):
@@ -140,10 +142,14 @@ class ASTRewriter:
             return RewriteResult(
                 success=True,
                 files_changed=0,
-                changes=[{
-                    "type": "rename", "file": str(file_path),
-                    "old": old_name, "new": new_name,
-                }],
+                changes=[
+                    {
+                        "type": "rename",
+                        "file": str(file_path),
+                        "old": old_name,
+                        "new": new_name,
+                    }
+                ],
                 preview=preview_unified_diff(source, new_source, file_path.name),
             )
         file_path.write_text(new_source, encoding="utf-8")
@@ -155,18 +161,30 @@ class ASTRewriter:
         )
 
     def _move_libcst(self, source: str, file_path: Path, params: dict) -> RewriteResult:
-        return RewriteResult(success=True, files_changed=1, changes=[{"type": "move", "file": str(file_path), "details": params}])
+        return RewriteResult(
+            success=True, files_changed=1, changes=[{"type": "move", "file": str(file_path), "details": params}]
+        )
 
     def _inline_libcst(self, source: str, file_path: Path, params: dict) -> RewriteResult:
-        return RewriteResult(success=True, files_changed=1, changes=[{"type": "inline", "file": str(file_path), "details": params}])
+        return RewriteResult(
+            success=True, files_changed=1, changes=[{"type": "inline", "file": str(file_path), "details": params}]
+        )
 
     def _encapsulate_field_libcst(self, source: str, file_path: Path, params: dict) -> RewriteResult:
-        return RewriteResult(success=True, files_changed=1, changes=[{"type": "encapsulate_field", "file": str(file_path), "details": params}])
+        return RewriteResult(
+            success=True,
+            files_changed=1,
+            changes=[{"type": "encapsulate_field", "file": str(file_path), "details": params}],
+        )
 
     def _general_rewrite_libcst(self, source: str, file_path: Path, params: dict) -> RewriteResult:
-        return RewriteResult(success=True, files_changed=1, changes=[{"type": "general", "file": str(file_path), "details": params}])
+        return RewriteResult(
+            success=True, files_changed=1, changes=[{"type": "general", "file": str(file_path), "details": params}]
+        )
 
-    def _rewrite_ruff(self, file_path: Path, refactoring_type: str, params: dict, dry_run: bool = False) -> RewriteResult:
+    def _rewrite_ruff(
+        self, file_path: Path, refactoring_type: str, params: dict, dry_run: bool = False
+    ) -> RewriteResult:
         """Rewrite using ruff (limited to lint fixes)."""
         # Ruff can only apply lint fixes, not arbitrary refactorings
         _ = (refactoring_type, params)
@@ -198,7 +216,7 @@ class ASTRewriter:
         """Built-in AST rewrite (limited)."""
         # Use Python's ast module for basic transformations
         source = file_path.read_text(encoding="utf-8")
-        tree = ast.parse(source)
+        _tree = ast.parse(source)
 
         # This is very limited - real refactoring needs libcst
         return RewriteResult(

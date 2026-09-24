@@ -18,12 +18,27 @@ TIER_BUDGETS = {
 }
 
 _TIER_3_HINTS = (
-    "gpt-5", "gpt-4", "claude", "70b", "72b", "flagship", "opus", "o1", "o3",
-    "gemini-ultra", "command-r-plus",
+    "gpt-5",
+    "gpt-4",
+    "claude",
+    "70b",
+    "72b",
+    "flagship",
+    "opus",
+    "o1",
+    "o3",
+    "gemini-ultra",
+    "command-r-plus",
 )
 _TIER_2_HINTS = (
-    "14b", "32b", "mixtral", "mistral-large", "qwen2.5:32b", "nemotron",
-    "gemini-flash", "gpt-3.5",
+    "14b",
+    "32b",
+    "mixtral",
+    "mistral-large",
+    "qwen2.5:32b",
+    "nemotron",
+    "gemini-flash",
+    "gpt-3.5",
 )
 _REASONING_HINTS = ("reason", "r1", "qwq", "think", "deepseek-r1", "o1", "qwen3")
 
@@ -117,8 +132,12 @@ def resolve_brain_config(config: dict, env: dict | None = None) -> dict:
 
 
 def probe_capabilities(
-    provider, model: str, config: dict, verify: bool = False,
-    project=None, force_probe: bool = False,
+    provider,
+    model: str,
+    config: dict,
+    verify: bool = False,
+    project=None,
+    force_probe: bool = False,
 ) -> CapabilityProfile:
     """Dynamic handshake: backend probe + live show + matrix + config overrides.
 
@@ -168,15 +187,21 @@ def probe_capabilities(
         handshake = None
         if project is not None and not force_probe:
             handshake = load_cached_handshake(
-                project, profile.provider,
-                getattr(provider, "endpoint", ""), model, config,
+                project,
+                profile.provider,
+                getattr(provider, "endpoint", ""),
+                model,
+                config,
             )
         if handshake is None:
             handshake = verify_generation(provider, model)
             if handshake.get("json_valid"):
                 save_cached_handshake(
-                    project, profile.provider,
-                    getattr(provider, "endpoint", ""), model, handshake,
+                    project,
+                    profile.provider,
+                    getattr(provider, "endpoint", ""),
+                    model,
+                    handshake,
                 )
         else:
             handshake = {**handshake, "source": "cache"}
@@ -214,8 +239,11 @@ def adaptive_params(profile: CapabilityProfile, configured: dict | None = None) 
 
 
 def resolve_runtime(
-    config: dict, verify: bool = False, fast: bool = False,
-    project=None, force_probe: bool = False,
+    config: dict,
+    verify: bool = False,
+    fast: bool = False,
+    project=None,
+    force_probe: bool = False,
 ) -> tuple:
     """Resolve (provider, profile, adaptive) for a config. Never raises.
 
@@ -236,18 +264,18 @@ def resolve_runtime(
     try:
         auto_cfg = config.get("autonomous", {}) if isinstance(config, dict) else {}
         force = bool(auto_cfg.get("force_probe", False)) if isinstance(auto_cfg, dict) else False
-        profile = probe_capabilities(
-            provider, model, config, verify=verify, project=project, force_probe=force
-        )
+        profile = probe_capabilities(provider, model, config, verify=verify, project=project, force_probe=force)
     except Exception:
         profile = classify_model(model)
     auto = config.get("autonomous", {}) if isinstance(config, dict) else {}
     limits = config.get("limits", {}) if isinstance(config, dict) else {}
     configured = {
         "max_cycles": (auto or {}).get("max_cycles", profile.max_cycles)
-        if isinstance(auto, dict) else profile.max_cycles,
+        if isinstance(auto, dict)
+        else profile.max_cycles,
         "budget": (limits or {}).get("contextTokenBudget", profile.retrieval_budget)
-        if isinstance(limits, dict) else profile.retrieval_budget,
+        if isinstance(limits, dict)
+        else profile.retrieval_budget,
     }
     return provider, profile, adaptive_params(profile, configured)
 
@@ -361,12 +389,9 @@ def verify_generation(provider, model: str, timeout: int = HANDSHAKE_TIMEOUT) ->
     try:
         from robots.brain.provider import ModelOptions
 
-        response = provider.generate(
-            HANDSHAKE_PROMPT, ModelOptions(temperature=0.0, num_predict=32, timeout=timeout)
-        )
+        response = provider.generate(HANDSHAKE_PROMPT, ModelOptions(temperature=0.0, num_predict=32, timeout=timeout))
     except Exception as error:
-        return {"verified": False, "json_valid": False, "latency_ms": -1,
-                "error": str(error), "text": ""}
+        return {"verified": False, "json_valid": False, "latency_ms": -1, "error": str(error), "text": ""}
     valid, _ = validate_handshake_text(response.text)
     return {
         "verified": valid and not bool(response.error),
@@ -398,9 +423,7 @@ def _handshake_ttl(config: dict) -> int:
     return HANDSHAKE_TTL_SECONDS
 
 
-def load_cached_handshake(
-    project, provider_kind: str, endpoint: str, model: str, config: dict
-) -> dict | None:
+def load_cached_handshake(project, provider_kind: str, endpoint: str, model: str, config: dict) -> dict | None:
     """Return a fresh cached handshake for this backend+model, else None."""
     import json as _json
     import time as _time
@@ -430,9 +453,7 @@ def load_cached_handshake(
     return result
 
 
-def save_cached_handshake(
-    project, provider_kind: str, endpoint: str, model: str, result: dict
-) -> bool:
+def save_cached_handshake(project, provider_kind: str, endpoint: str, model: str, result: dict) -> bool:
     """Persist a valid handshake result centrally. Never raises."""
     import json as _json
     import time as _time
@@ -442,13 +463,16 @@ def save_cached_handshake(
         return False
     try:
         path.write_text(
-            _json.dumps({
-                "provider": provider_kind,
-                "endpoint": endpoint or "",
-                "model": model,
-                "ts": _time.time(),
-                "result": result,
-            }) + "\n",
+            _json.dumps(
+                {
+                    "provider": provider_kind,
+                    "endpoint": endpoint or "",
+                    "model": model,
+                    "ts": _time.time(),
+                    "result": result,
+                }
+            )
+            + "\n",
             encoding="utf-8",
         )
         return True

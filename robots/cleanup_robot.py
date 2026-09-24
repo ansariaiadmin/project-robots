@@ -62,13 +62,15 @@ def inspect(project: Path) -> tuple[dict, Path]:
                 continue
             visited.add(path)
             size, files = _size(path)
-            candidates.append({
-                "path": path.relative_to(project).as_posix(),
-                "bytes": size,
-                "files": files,
-                "reason": CANDIDATE_NAMES[name],
-                "action": "review-before-removal",
-            })
+            candidates.append(
+                {
+                    "path": path.relative_to(project).as_posix(),
+                    "bytes": size,
+                    "files": files,
+                    "reason": CANDIDATE_NAMES[name],
+                    "action": "review-before-removal",
+                }
+            )
     candidates.sort(key=lambda item: item["bytes"], reverse=True)
     payload = {
         "ok": True,

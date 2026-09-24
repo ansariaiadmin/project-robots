@@ -58,9 +58,31 @@ DEFAULT_IGNORES = (
     "**/tmp/**",
 )
 TEXT_SUFFIXES = {
-    ".c", ".cc", ".cpp", ".css", ".go", ".h", ".hpp", ".html", ".java",
-    ".js", ".json", ".jsx", ".md", ".mjs", ".py", ".rs", ".sh", ".sql",
-    ".toml", ".ts", ".tsx", ".txt", ".xml", ".yaml", ".yml",
+    ".c",
+    ".cc",
+    ".cpp",
+    ".css",
+    ".go",
+    ".h",
+    ".hpp",
+    ".html",
+    ".java",
+    ".js",
+    ".json",
+    ".jsx",
+    ".md",
+    ".mjs",
+    ".py",
+    ".rs",
+    ".sh",
+    ".sql",
+    ".toml",
+    ".ts",
+    ".tsx",
+    ".txt",
+    ".xml",
+    ".yaml",
+    ".yml",
 }
 MANIFESTS = {
     "node": ("package.json",),
@@ -109,10 +131,10 @@ def resolve_project(raw: str | Path) -> Path:
 
 
 def slug(project: Path) -> str:
-    safe_name = "".join(
-        char if char.isalnum() or char in "-_" else "-"
-        for char in project.name.lower()
-    ).strip("-") or "project"
+    safe_name = (
+        "".join(char if char.isalnum() or char in "-_" else "-" for char in project.name.lower()).strip("-")
+        or "project"
+    )
     digest = hashlib.sha256(str(project).encode("utf-8")).hexdigest()[:10]
     return f"{safe_name}-{digest}"
 
@@ -167,9 +189,7 @@ def is_ignored(relative_path: str, patterns: Iterable[str]) -> bool:
         normalized = normalized[2:]
     normalized = normalized.lstrip("/")
     return any(
-        fnmatch.fnmatch(normalized, pattern)
-        or fnmatch.fnmatch(f"{normalized}/", pattern)
-        for pattern in patterns
+        fnmatch.fnmatch(normalized, pattern) or fnmatch.fnmatch(f"{normalized}/", pattern) for pattern in patterns
     )
 
 
@@ -195,11 +215,7 @@ def effective_env() -> dict[str, str]:
         )
     nvm_root = home / ".nvm" / "versions" / "node"
     if nvm_root.is_dir():
-        discovered.extend(
-            path / "bin"
-            for path in nvm_root.iterdir()
-            if (path / "bin" / "node").is_file()
-        )
+        discovered.extend(path / "bin" for path in nvm_root.iterdir() if (path / "bin" / "node").is_file())
     for candidate in sorted(discovered, reverse=True):
         if str(candidate) not in paths:
             paths.insert(0, str(candidate))
@@ -397,11 +413,7 @@ def detect_kinds(project: Path) -> dict[str, list[str]]:
     for kind, patterns in MANIFESTS.items():
         matches = []
         for pattern in patterns:
-            matches.extend(
-                path.relative_to(project).as_posix()
-                for path in project.glob(pattern)
-                if path.is_file()
-            )
+            matches.extend(path.relative_to(project).as_posix() for path in project.glob(pattern) if path.is_file())
         if matches:
             found[kind] = sorted(set(matches))
     return found
@@ -489,6 +501,8 @@ def comment_marker(line: str, suffix: str) -> str | None:
         if not stripped.startswith(("/*", "*")):
             return None
         comment = stripped
+    # TASK #5: This is intentional marker detection for hygiene checks, not a TODO placeholder
+    # Markers are detected to report hygiene risks, not to leave TODOs in code
     for marker in ("TODO", "FIXME", "WIP", "XXX"):
         if marker in comment.upper():
             return marker

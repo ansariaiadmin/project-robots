@@ -131,8 +131,12 @@ def evaluate_write_policy(
     if risk > RISK_HARD_DENY:
         reasons.append(f"risk {risk:.2f} exceeds hard-deny {RISK_HARD_DENY:.2f}")
         return WritePolicy(
-            decision="deny", allowlist=allowlist, dry_run=True,
-            risk=risk, threshold=threshold, reasons=reasons,
+            decision="deny",
+            allowlist=allowlist,
+            dry_run=True,
+            risk=risk,
+            threshold=threshold,
+            reasons=reasons,
         )
     forced_dry = bool(dry_run_requested)
     if config is not None:
@@ -142,16 +146,23 @@ def evaluate_write_policy(
     if risk > threshold:
         reasons.append(f"risk {risk:.2f} exceeds threshold {threshold:.2f}: preview only")
         return WritePolicy(
-            decision="dry-run", allowlist=allowlist, dry_run=True,
-            risk=risk, threshold=threshold, reasons=reasons,
+            decision="dry-run",
+            allowlist=allowlist,
+            dry_run=True,
+            risk=risk,
+            threshold=threshold,
+            reasons=reasons,
         )
     reasons.append(f"risk {risk:.2f} within threshold {threshold:.2f}")
     if forced_dry:
         reasons.append("dry-run requested by operator config")
     return WritePolicy(
         decision="allow" if not forced_dry else "dry-run",
-        allowlist=allowlist, dry_run=forced_dry,
-        risk=risk, threshold=threshold, reasons=reasons,
+        allowlist=allowlist,
+        dry_run=forced_dry,
+        risk=risk,
+        threshold=threshold,
+        reasons=reasons,
     )
 
 
@@ -170,8 +181,11 @@ def is_path_allowed(project: Path, rel: str, policy: WritePolicy) -> tuple[bool,
 def preview_unified_diff(old_text: str, new_text: str, rel: str) -> str:
     """Diff preview without touching the filesystem."""
     lines = difflib.unified_diff(
-        old_text.splitlines(), new_text.splitlines(),
-        fromfile=f"a/{rel}", tofile=f"b/{rel}", lineterm="",
+        old_text.splitlines(),
+        new_text.splitlines(),
+        fromfile=f"a/{rel}",
+        tofile=f"b/{rel}",
+        lineterm="",
     )
     return "\n".join(list(lines)[:200])
 

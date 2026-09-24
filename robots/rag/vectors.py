@@ -84,9 +84,7 @@ def try_external_embedding(
         return None
     try:
         payload = json.dumps({"model": model, "input": texts[:8]}).encode("utf-8")
-        request = urllib.request.Request(
-            endpoint, data=payload, headers={"Content-Type": "application/json"}
-        )
+        request = urllib.request.Request(endpoint, data=payload, headers={"Content-Type": "application/json"})
         with urllib.request.urlopen(request, timeout=timeout) as response:
             data = json.loads(response.read().decode("utf-8"))
         vectors = data.get("embeddings") or data.get("vectors") or []
@@ -107,10 +105,7 @@ def vector_rank(project: Path, query: str, limit: int = 40) -> list[str]:
     con = sqlite3.connect(str(db_path))
     try:
         rows = con.execute("SELECT id, text FROM chunks").fetchall()
-        embeds = {
-            row[0]: row[1]
-            for row in con.execute("SELECT chunk_id, vec FROM embeddings").fetchall()
-        }
+        embeds = {row[0]: row[1] for row in con.execute("SELECT chunk_id, vec FROM embeddings").fetchall()}
     except sqlite3.OperationalError:
         con.close()
         return []

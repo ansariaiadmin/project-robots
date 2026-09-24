@@ -53,8 +53,11 @@ def snapshot() -> HostSnapshot:
         procs = None
     per_cpu = (load_1m / cpu) if load_1m is not None and cpu > 0 else None
     return HostSnapshot(
-        cpu_count=cpu, load_1m=load_1m, load_per_cpu=per_cpu,
-        mem_available_mb=mem_mb, procs=procs,
+        cpu_count=cpu,
+        load_1m=load_1m,
+        load_per_cpu=per_cpu,
+        mem_available_mb=mem_mb,
+        procs=procs,
     )
 
 

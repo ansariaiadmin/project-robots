@@ -8,10 +8,27 @@ from pathlib import Path
 
 from robots.rag.store import index_db_path
 
-_STOPWORDS = frozenset({
-    "the", "and", "for", "with", "from", "that", "this", "are", "was",
-    "have", "has", "will", "would", "should", "could", "about", "into",
-})
+_STOPWORDS = frozenset(
+    {
+        "the",
+        "and",
+        "for",
+        "with",
+        "from",
+        "that",
+        "this",
+        "are",
+        "was",
+        "have",
+        "has",
+        "will",
+        "would",
+        "should",
+        "could",
+        "about",
+        "into",
+    }
+)
 
 
 def tokenize_query(query: str, max_terms: int = 20) -> list[str]:
@@ -49,8 +66,7 @@ def fts_search(project: Path, query: str, limit: int = 40) -> list[str]:
     try:
         try:
             cur = con.execute(
-                "SELECT chunk_id FROM chunks_fts WHERE chunks_fts MATCH ? "
-                "ORDER BY bm25(chunks_fts) LIMIT ?",
+                "SELECT chunk_id FROM chunks_fts WHERE chunks_fts MATCH ? ORDER BY bm25(chunks_fts) LIMIT ?",
                 (match, limit),
             )
             return [row[0] for row in cur.fetchall()]

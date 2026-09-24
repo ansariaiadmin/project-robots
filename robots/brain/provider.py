@@ -48,9 +48,7 @@ class ProbeInfo:
 
 def _post_json(url: str, payload: dict, timeout: int, headers: dict | None = None) -> dict:
     body = json.dumps(payload).encode("utf-8")
-    request = urllib.request.Request(
-        url, data=body, headers={"Content-Type": "application/json", **(headers or {})}
-    )
+    request = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json", **(headers or {})})
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
             return json.loads(response.read().decode("utf-8"))
@@ -121,20 +119,20 @@ class OllamaProvider(BaseProvider):
             try:
                 data = _post_json(f"{self.endpoint}/api/chat", chat, opts.timeout)
             except BrainError as error:
-                return ModelResponse(
-                    text="", model=self.model, provider=self.kind, error=str(error)
-                )
+                return ModelResponse(text="", model=self.model, provider=self.kind, error=str(error))
             message = data.get("message", {})
             text = str(message.get("content", "")) if isinstance(message, dict) else ""
         latency = int((time.monotonic() - started) * 1000)
         if not text:
             return ModelResponse(
-                text="", model=self.model, provider=self.kind,
-                latency_ms=latency, done=False, error="empty response",
+                text="",
+                model=self.model,
+                provider=self.kind,
+                latency_ms=latency,
+                done=False,
+                error="empty response",
             )
-        return ModelResponse(
-            text=text, model=self.model, provider=self.kind, latency_ms=latency
-        )
+        return ModelResponse(text=text, model=self.model, provider=self.kind, latency_ms=latency)
 
     def probe(self) -> ProbeInfo:
         try:
@@ -203,9 +201,7 @@ class OpenAICompatibleProvider(BaseProvider):
         }
         started = time.monotonic()
         try:
-            data = _post_json(
-                f"{self.endpoint}/v1/chat/completions", payload, opts.timeout, self._headers()
-            )
+            data = _post_json(f"{self.endpoint}/v1/chat/completions", payload, opts.timeout, self._headers())
         except BrainError as error:
             return ModelResponse(text="", model=self.model, provider=self.kind, error=str(error))
         text = ""
@@ -219,12 +215,14 @@ class OpenAICompatibleProvider(BaseProvider):
         latency = int((time.monotonic() - started) * 1000)
         if not text:
             return ModelResponse(
-                text="", model=self.model, provider=self.kind,
-                latency_ms=latency, done=False, error="empty choices",
+                text="",
+                model=self.model,
+                provider=self.kind,
+                latency_ms=latency,
+                done=False,
+                error="empty choices",
             )
-        return ModelResponse(
-            text=text, model=self.model, provider=self.kind, latency_ms=latency
-        )
+        return ModelResponse(text=text, model=self.model, provider=self.kind, latency_ms=latency)
 
     def probe(self) -> ProbeInfo:
         try:
@@ -262,14 +260,18 @@ class MockProvider(BaseProvider):
             "risk_note": "mock provider performs no writes beyond guardrails",
         }
         return ModelResponse(
-            text=json.dumps(plan), model=self.model or "mock-small",
-            provider=self.kind, latency_ms=0,
+            text=json.dumps(plan),
+            model=self.model or "mock-small",
+            provider=self.kind,
+            latency_ms=0,
         )
 
     def probe(self) -> ProbeInfo:
         return ProbeInfo(
-            ok=True, provider=self.kind,
-            models=[self.model or "mock-small"], model_known=True,
+            ok=True,
+            provider=self.kind,
+            models=[self.model or "mock-small"],
+            model_known=True,
         )
 
 
@@ -287,18 +289,9 @@ def provider_from_config(config: dict, env: dict | None = None) -> BaseProvider:
     auto = config.get("autonomous", {}) if isinstance(config, dict) else {}
     if not isinstance(auto, dict):
         auto = {}
-    endpoint = (
-        brain.get("endpoint") or auto.get("endpoint")
-        or environ.get("PROJECT_ROBOTS_MODEL_ENDPOINT", "")
-    )
-    model = (
-        brain.get("model") or auto.get("model") or environ.get("PROJECT_ROBOTS_MODEL_NAME", "")
-        or "mock-small"
-    )
-    kind = (
-        brain.get("provider") or auto.get("provider")
-        or environ.get("PROJECT_ROBOTS_MODEL_PROVIDER", "")
-    ).lower()
+    endpoint = brain.get("endpoint") or auto.get("endpoint") or environ.get("PROJECT_ROBOTS_MODEL_ENDPOINT", "")
+    model = brain.get("model") or auto.get("model") or environ.get("PROJECT_ROBOTS_MODEL_NAME", "") or "mock-small"
+    kind = (brain.get("provider") or auto.get("provider") or environ.get("PROJECT_ROBOTS_MODEL_PROVIDER", "")).lower()
     timeout = int(brain.get("timeout", auto.get("timeout", 60)))
     api_key = brain.get("api_key", "") or environ.get("PROJECT_ROBOTS_MODEL_API_KEY", "")
     endpoint = str(endpoint).strip()

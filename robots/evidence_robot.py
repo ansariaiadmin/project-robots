@@ -26,10 +26,7 @@ def inspect(project: Path) -> tuple[dict, Path]:
             evidence = json.loads(latest.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             evidence = {}
-        bound = (
-            evidence.get("stableSourceState") is True
-            and evidence.get("sourceState") == current
-        )
+        bound = evidence.get("stableSourceState") is True and evidence.get("sourceState") == current
         passed = bound and evidence.get("passed") is True
         payload = {
             "ok": passed,
@@ -46,11 +43,7 @@ def inspect(project: Path) -> tuple[dict, Path]:
             ),
             "sourceState": current,
             "evidenceCreatedAt": evidence.get("createdAt"),
-            "failedChecks": [
-                row.get("name")
-                for row in evidence.get("results", [])
-                if row.get("passed") is not True
-            ],
+            "failedChecks": [row.get("name") for row in evidence.get("results", []) if row.get("passed") is not True],
         }
     output = write_json(project, "evidence", "latest.json", payload)
     return payload, output

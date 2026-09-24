@@ -16,43 +16,44 @@ from robots.impact.risk_scorer import compute_risk_score, RiskScorer
 
 class ImpactRobot(BaseRobot):
     """Robot for impact analysis and risk scoring."""
+
     name = "impact"
     version = 1
-    
+
     def inspect(self, project: Path, config: dict) -> RobotResult:
         """Run impact analysis on current changes."""
         # Get changed files
         from robots.common import changed_files
+
         changes = changed_files(project, config)
         changed_files_list = [c["path"] for c in changes]
-        
+
         if not changed_files_list:
             return RobotResult(
                 ok=True,
                 summary={"message": "No changes to analyze"},
                 output=write_json(project, "impact", "latest.json", {}),
             )
-        
+
         # Build intelligence
         intelligence = build_repository_intelligence(project, config)
-        
+
         # Run all analyses
         reachability = analyze_reachability(project, config, changed_files_list)
         coupling_impact = ReachabilityAnalyzer(intelligence).compute_coupling_impact(changed_files_list)
         mutation = run_mutation_testing(project, config, changed_files_list)
         contract_diff = analyze_contract_diff(project, config)
         property_result = run_property_fuzzing(project, config, changed_files_list)
-        
+
         # Compute risk score
         risk_score = compute_risk_score(
-            project, config, reachability, coupling_impact,
-            mutation, contract_diff, property_result
+            project, config, reachability, coupling_impact, mutation, contract_diff, property_result
         )
-        
+
         # Decision
         scorer = RiskScorer(config)
         decision = scorer.get_decision(risk_score)
-        
+
         result_data = {
             "changed_files": changed_files_list,
             "reachability": {
@@ -80,9 +81,9 @@ class ImpactRobot(BaseRobot):
             "risk_score": risk_score.to_dict(),
             "decision": decision,
         }
-        
+
         output = write_json(project, "impact", "latest.json", result_data)
-        
+
         return RobotResult(
             ok=decision != "reject",
             summary={
@@ -94,7 +95,7 @@ class ImpactRobot(BaseRobot):
             output=output,
             metadata=result_data,
         )
-    
+
     def plan(self, project: Path, config: dict) -> Plan:
         return Plan(
             name="impact",
@@ -108,7 +109,7 @@ class ImpactRobot(BaseRobot):
             ],
             risk_score=0.0,
         )
-    
+
     def execute(self, project: Path, plan: Plan) -> RobotResult:
         return self.inspect(project, {})
 
@@ -120,10 +121,10 @@ register_robot(ImpactRobot())
 if __name__ == "__main__":
     import sys
     from robots.common import resolve_project
-    
+
     project = resolve_project(sys.argv[1] if len(sys.argv) > 1 else ".")
     config, _ = load_config(project)
-    
+
     robot = ImpactRobot()
     result = robot.inspect(project, config)
     print(f"{'OK' if result.ok else 'REVIEW'}: {result.summary}")

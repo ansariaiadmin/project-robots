@@ -11,6 +11,7 @@ from pathlib import Path
 @dataclass(slots=True)
 class PatchResult:
     """Result of semantic patch application."""
+
     success: bool
     files_changed: int
     changes: list[dict]
@@ -61,8 +62,12 @@ class SemanticPatcher:
         """
         if allowed_files is not None:
             return self._apply_builtin(
-                pattern, replacement, file_pattern, directory,
-                dry_run=dry_run, allowed_files=allowed_files,
+                pattern,
+                replacement,
+                file_pattern,
+                directory,
+                dry_run=dry_run,
+                allowed_files=allowed_files,
             )
         if self.use_comby:
             return self._apply_comby(pattern, replacement, file_pattern, directory, dry_run)
@@ -208,9 +213,9 @@ expression E;
 
         if allowed_files is not None:
             candidates = [
-                cwd / rel for rel in sorted(allowed_files)
-                if fnmatch.fnmatch(rel, file_pattern)
-                or fnmatch.fnmatch(Path(rel).name, file_pattern)
+                cwd / rel
+                for rel in sorted(allowed_files)
+                if fnmatch.fnmatch(rel, file_pattern) or fnmatch.fnmatch(Path(rel).name, file_pattern)
             ]
         else:
             candidates = [p for p in cwd.rglob(file_pattern) if p.is_file()]
@@ -293,6 +298,4 @@ def apply_semantic_patch(
 ) -> PatchResult:
     """Convenience function to apply semantic patch."""
     patcher = SemanticPatcher(config or {})
-    return patcher.apply_patch(
-        pattern, replacement, file_pattern, directory, dry_run, allowed_files
-    )
+    return patcher.apply_patch(pattern, replacement, file_pattern, directory, dry_run, allowed_files)

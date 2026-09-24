@@ -11,6 +11,7 @@ from typing import Protocol, runtime_checkable
 @dataclass(frozen=True, slots=True)
 class RobotResult:
     """Standardized robot output."""
+
     ok: bool
     summary: dict
     output: Path
@@ -24,6 +25,7 @@ class RobotResult:
 @dataclass(frozen=True, slots=True)
 class Plan:
     """Execution plan with metadata."""
+
     name: str
     steps: list[dict]
     risk_score: float = 0.0
@@ -37,6 +39,7 @@ class Plan:
 @runtime_checkable
 class Robot(Protocol):
     """Base protocol for all robots."""
+
     name: str
     version: int
 
@@ -47,6 +50,7 @@ class Robot(Protocol):
 
 class BaseRobot(ABC):
     """Abstract base with common utilities."""
+
     name: str = "base"
     version: int = 1
 

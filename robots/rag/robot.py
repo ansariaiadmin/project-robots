@@ -25,9 +25,7 @@ def build_index_command(
 ) -> tuple[dict, Path]:
     from robots.rag.store import build_index
 
-    info = build_index(
-        project, config, force=force, chunk_max_lines=chunk_max_lines, no_embed=no_embed
-    )
+    info = build_index(project, config, force=force, chunk_max_lines=chunk_max_lines, no_embed=no_embed)
     payload = {
         "ok": True,
         "project": str(project),
@@ -93,9 +91,7 @@ def query_command(
         ranked.append({**chunk, **entry})
 
     # Budget allocation over full text (text kept in payload? No — keep refs only).
-    alloc_input = [
-        {"id": r["id"], "token_est": int(r["token_est"]), "ref": r} for r in ranked
-    ]
+    alloc_input = [{"id": r["id"], "token_est": int(r["token_est"]), "ref": r} for r in ranked]
     first, on_demand, estimated = allocate(alloc_input, token_budget)
     hits = [
         {
@@ -131,11 +127,17 @@ def query_command(
         "hits": hits,
     }
     output = write_json(project, "rag", "query-latest.json", payload)
-    lines = ["# RAG Query", "", f"Task: {task or 'Not supplied'}",
-             f"Hits: {len(hits)} First-read: {estimated}/{token_budget}", "", "## Hits", ""]
+    lines = [
+        "# RAG Query",
+        "",
+        f"Task: {task or 'Not supplied'}",
+        f"Hits: {len(hits)} First-read: {estimated}/{token_budget}",
+        "",
+        "## Hits",
+        "",
+    ]
     for hit in hits:
-        lines.append(f"- `{hit['path']}:{hit['start']}-{hit['end']}` "
-                     f"{hit['symbol']} (rrf={hit['rrf']}, {hit['open']})")
+        lines.append(f"- `{hit['path']}:{hit['start']}-{hit['end']}` {hit['symbol']} (rrf={hit['rrf']}, {hit['open']})")
     md_path = write_markdown(project, "rag", "query-latest.md", "\n".join(lines))
     _ = sqlite3  # keep import used for future extensions
     _ = cache_dir
@@ -163,8 +165,13 @@ def query_for_context(
         # Strict guarantee: RAG first-tokens must fit the remaining budget.
         # allocate() always keeps the top chunk, so drop all hits on overflow.
         if first_tokens > budget_remaining:
-            return {"hits": [], "firstTokens": 0, "stale": False,
-                    "embed": payload["summary"].get("embed"), "dropped": "budget-overflow"}
+            return {
+                "hits": [],
+                "firstTokens": 0,
+                "stale": False,
+                "embed": payload["summary"].get("embed"),
+                "dropped": "budget-overflow",
+            }
         return {
             "hits": payload["hits"],
             "firstTokens": payload["summary"]["firstTokens"],
@@ -190,8 +197,7 @@ class RAGRobot(BaseRobot):
         output = cache_dir(project, "rag") / "latest.json"
         return RobotResult(
             ok=fresh,
-            summary={"chunks": chunks, "stale": not fresh,
-                     "embed": str((meta or {}).get("embedModel", "none"))},
+            summary={"chunks": chunks, "stale": not fresh, "embed": str((meta or {}).get("embedModel", "none"))},
             output=output,
             metadata={"meta": meta or {}},
         )

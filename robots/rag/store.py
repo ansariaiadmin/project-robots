@@ -61,10 +61,7 @@ def _init_schema(con: sqlite3.Connection) -> str:
         "symbol TEXT, symtype TEXT, layer TEXT, text TEXT, text_hash TEXT,"
         "token_est INTEGER, churn INTEGER, complexity INTEGER, imports_json TEXT)"
     )
-    con.execute(
-        "CREATE TABLE IF NOT EXISTS embeddings("
-        "chunk_id TEXT PRIMARY KEY, dim INTEGER, vec BLOB, model TEXT)"
-    )
+    con.execute("CREATE TABLE IF NOT EXISTS embeddings(chunk_id TEXT PRIMARY KEY, dim INTEGER, vec BLOB, model TEXT)")
     # Prefer porter tokenizer, fall back to unicode61.
     try:
         con.execute(
@@ -74,10 +71,7 @@ def _init_schema(con: sqlite3.Connection) -> str:
         )
         return "porter"
     except sqlite3.OperationalError:
-        con.execute(
-            "CREATE VIRTUAL TABLE IF NOT EXISTS chunks_fts USING "
-            "fts5(chunk_id UNINDEXED, text, symbol, path)"
-        )
+        con.execute("CREATE VIRTUAL TABLE IF NOT EXISTS chunks_fts USING fts5(chunk_id UNINDEXED, text, symbol, path)")
         return "unicode61"
 
 
@@ -174,10 +168,19 @@ def build_index(
                 "layer,text,text_hash,token_est,churn,complexity,imports_json)"
                 " VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (
-                    chunk["id"], chunk["path"], chunk["start_line"], chunk["end_line"],
-                    chunk["symbol"], chunk["symtype"], chunk.get("layer", "unknown"),
-                    chunk["text"], chunk["text_hash"], chunk["token_est"],
-                    int(chunk.get("churn", 0)), int(chunk.get("complexity", 0)), "[]",
+                    chunk["id"],
+                    chunk["path"],
+                    chunk["start_line"],
+                    chunk["end_line"],
+                    chunk["symbol"],
+                    chunk["symtype"],
+                    chunk.get("layer", "unknown"),
+                    chunk["text"],
+                    chunk["text_hash"],
+                    chunk["token_est"],
+                    int(chunk.get("churn", 0)),
+                    int(chunk.get("complexity", 0)),
+                    "[]",
                 ),
             )
             con.execute(

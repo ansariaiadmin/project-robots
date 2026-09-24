@@ -23,8 +23,15 @@ SUSPICIOUS_NAMES = re.compile(
     re.IGNORECASE,
 )
 GENERATED_PARTS = {
-    "node_modules", ".venv", "venv", "__pycache__", "dist", "build",
-    "target", ".next", "coverage",
+    "node_modules",
+    ".venv",
+    "venv",
+    "__pycache__",
+    "dist",
+    "build",
+    "target",
+    ".next",
+    "coverage",
 }
 
 
@@ -66,17 +73,17 @@ def inspect(project: Path) -> tuple[dict, Path]:
                 conflicts.append({"path": relative, "line": line_number})
             marker = comment_marker(line, path.suffix)
             if marker:
-                todos.append({
-                    "path": relative,
-                    "line": line_number,
-                    "marker": marker,
-                })
+                todos.append(
+                    {
+                        "path": relative,
+                        "line": line_number,
+                        "marker": marker,
+                    }
+                )
             if len(conflicts) + len(todos) >= limit:
                 break
 
-    duplicate_files = [
-        paths for paths in hashes.values() if len(paths) > 1
-    ]
+    duplicate_files = [paths for paths in hashes.values() if len(paths) > 1]
     errors = len(conflicts) + len(suspicious_files)
     warnings = len(large_files) + len(generated_files) + len(duplicate_files)
     payload = {

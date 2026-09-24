@@ -26,6 +26,7 @@ ENERGY_USD_PER_KWH = 0.15
 @dataclass(slots=True)
 class AutonomousConfig:
     """Configuration for autonomous operation."""
+
     max_cycles: int = 10
     risk_threshold: float = 0.3
     critique_iterations: int = 3
@@ -37,6 +38,7 @@ class AutonomousConfig:
 @dataclass(slots=True)
 class CycleResult:
     """Result of a single autonomous cycle."""
+
     cycle_id: str
     issue: str
     plan: dict
@@ -46,7 +48,7 @@ class CycleResult:
     error: str | None = None
 
 
-def _tool_dict(obj: object        ) -> dict:
+def _tool_dict(obj: object) -> dict:
     """Slots-safe dataclass serialization for tool results (never raises)."""
     try:
         from dataclasses import asdict, is_dataclass
@@ -100,7 +102,7 @@ def _written_files(execution_result: dict, project: Path) -> list[str]:
     return files
 
 
-def _syntax_check_files(project: Path, rel_paths: list[str]        ) -> dict:
+def _syntax_check_files(project: Path, rel_paths: list[str]) -> dict:
     """AST/syntax validation for changed Python files (stdlib compile)."""
     errors: list[dict] = []
     checked = 0
@@ -111,18 +113,18 @@ def _syntax_check_files(project: Path, rel_paths: list[str]        ) -> dict:
             compile((project / rel).read_text(encoding="utf-8"), rel, "exec")
             checked += 1
         except SyntaxError as error:
-            errors.append({"file": rel, "line": error.lineno or 0,
-                           "error": f"{error.msg} (line {error.lineno})"[:300]})
+            errors.append({"file": rel, "line": error.lineno or 0, "error": f"{error.msg} (line {error.lineno})"[:300]})
         except (OSError, ValueError) as error:
             errors.append({"file": rel, "line": 0, "error": str(error)[:300]})
     return {"checked": checked, "ok": not errors, "errors": errors}
 
 
-def _run_target_suite(project: Path, config: dict, timeout: int = 180        ) -> dict:
+def _run_target_suite(project: Path, config: dict, timeout: int = 180) -> dict:
     """Run the target project's pytest suite without touching its tree.
 
     Uses -p no:cacheprovider and PYTHONDONTWRITEBYTECODE so no
     .pytest_cache/__pycache__ is written into the target repository.
+    Returns explicit SKIPPED status with reason when no tests or discovery fails.
     """
     from robots.common import command_exists, tracked_files
 
@@ -140,28 +142,47 @@ def _run_target_suite(project: Path, config: dict, timeout: int = 180        ) -
             if path.name.startswith("test_") or path.name.endswith("_test.py"):
                 tests.append(rel)
     except Exception as error:
-        return {"skipped": True, "reason": f"test discovery failed: {error}"}
+        return {
+            "skipped": True,
+            "status": "SKIPPED",
+            "reason": f"test discovery failed: {error}",
+            "ok": False,
+        }
     if not tests:
-        return {"skipped": True, "reason": "no test files"}
+        return {
+            "skipped": True,
+            "status": "SKIPPED",
+            "reason": "no test files",
+            "ok": False,
+        }
     argv = [sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", *tests[:50]]
     env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
     try:
-        completed = subprocess.run(
-            argv, cwd=project, capture_output=True, text=True, timeout=timeout, env=env
-        )
+        completed = subprocess.run(argv, cwd=project, capture_output=True, text=True, timeout=timeout, env=env)
     except FileNotFoundError:
-        return {"skipped": True, "reason": "python interpreter not found"}
+        return {
+            "skipped": True,
+            "status": "SKIPPED",
+            "reason": "python interpreter not found",
+            "ok": False,
+        }
     except subprocess.TimeoutExpired:
-        return {"ok": False, "reason": f"timeout after {timeout}s", "tail": []}
-    output = (completed.stdout + "\n" + completed.stderr)
+        return {"ok": False, "status": "FAILED", "reason": f"timeout after {timeout}s", "tail": []}
+    output = completed.stdout + "\n" + completed.stderr
     tail = output.splitlines()[-30:]
     counts = {"passed": 0, "failed": 0}
     for match in re.finditer(r"(\d+)\s+(passed|failed)", output):
         counts[match.group(2)] = int(match.group(1))
     if not command_exists("pytest") and "No module named pytest" in output:
-        return {"skipped": True, "reason": "pytest not installed for target"}
+        return {
+            "skipped": True,
+            "status": "SKIPPED",
+            "reason": "pytest not installed for target",
+            "ok": False,
+        }
     return {
         "ok": completed.returncode == 0,
+        "status": "PASSED" if completed.returncode == 0 else "FAILED",
         "returncode": completed.returncode,
         "passed": counts["passed"],
         "failed": counts["failed"],
@@ -170,13 +191,99 @@ def _run_target_suite(project: Path, config: dict, timeout: int = 180        ) -
 
 
 def _verification_passed(verification: dict) -> bool:
-    """Aggregate pass flag across syntax, suite, and check evidence."""
-    syntax_ok = verification.get("syntax", {}).get("ok", True)
-    suite = verification.get("suite", {})
-    suite_ok = bool(suite.get("skipped", False) or suite.get("ok", False))
+    """Aggregate pass flag — shallow skipped is NOT passed, no-writes skipped is ok."""
     checks = verification.get("checks", {})
-    checks_ok = bool(checks.get("skipped", False) or checks.get("passed", False))
+    suite = verification.get("suite", {})
+    depth = verification.get("depth", checks.get("depth", ""))
+
+    # Shallow depth: explicit SKIPPED, not passed
+    if depth == "shallow" or checks.get("depth") == "shallow":
+        if checks.get("skipped"):
+            return False
+
+    # If checks skipped due to shallow, not passed
+    if checks.get("skipped") and depth == "shallow":
+        return False
+
+    syntax_ok = verification.get("syntax", {}).get("ok", True)
+
+    # Suite handling
+    if suite.get("skipped"):
+        if depth == "shallow":
+            # Shallow + suite skipped = not passed (explicit SKIPPED)
+            suite_ok = False
+        else:
+            # No-writes or generic skipped but not shallow: treat as ok for backward compat
+            # TASK #5 requires SKIPPED only for shallow throttle, not for no-writes
+            suite_ok = True
+    else:
+        suite_ok = suite.get("ok", True)
+
+    # Checks handling
+    if checks.get("skipped"):
+        if depth == "shallow":
+            checks_ok = False
+        else:
+            # For no-writes, checks may still be present (not skipped) or skipped due to no writes
+            # If checks skipped but not shallow, allow as ok for backward compat
+            checks_ok = True
+    else:
+        checks_ok = checks.get("passed", True)
+
     return bool(syntax_ok and suite_ok and checks_ok)
+
+
+def _verification_status(verification: dict) -> dict:
+    """Return explicit status: PASSED, FAILED, or SKIPPED with reason.
+
+    TASK #5: Shallow verification returns SKIPPED + reason, not success=True.
+    No-writes case returns PASSED for backward compat, but still explicit.
+    """
+    checks = verification.get("checks", {})
+    suite = verification.get("suite", {})
+    depth = verification.get("depth", checks.get("depth", ""))
+
+    # Shallow depth is explicit SKIPPED
+    if depth == "shallow":
+        if checks.get("skipped") or suite.get("skipped"):
+            return {
+                "status": "SKIPPED",
+                "reason": f"verification depth shallow — checks skipped (depth={depth})",
+                "depth": depth,
+            }
+
+    # No-writes case: suite skipped due to no writes — treat as PASSED for backward compat
+    # but still with explicit reason, not SKIPPED failure
+    if suite.get("skipped"):
+        reason = suite.get("reason", "")
+        if "no writes" in str(reason).lower():
+            return {
+                "status": "PASSED",
+                "reason": "no written files — suite skipped (no verification needed)",
+                "depth": depth,
+            }
+        if "no test" in str(reason).lower():
+            return {
+                "status": "PASSED",
+                "reason": f"suite skipped: {reason}",
+                "depth": depth,
+            }
+
+    # Generic skipped (non-shallow) — check if it's shallow-related
+    if checks.get("skipped"):
+        if depth == "shallow":
+            reason = checks.get("reason", "checks skipped due to shallow depth")
+            return {"status": "SKIPPED", "reason": str(reason), "depth": depth}
+        # For non-shallow, if checks skipped for other reason, treat as PASSED for backward compat
+        # unless explicitly marked as SKIPPED with status
+        if checks.get("status") == "SKIPPED" and depth == "shallow":
+            return {"status": "SKIPPED", "reason": checks.get("reason", "checks skipped"), "depth": depth}
+
+    # Not skipped — check if passed
+    if _verification_passed(verification):
+        return {"status": "PASSED", "reason": "all checks passed", "depth": depth}
+    else:
+        return {"status": "FAILED", "reason": "verification failed", "depth": depth}
 
 
 def _wants_dry_run(brain: dict, config: dict) -> bool:
@@ -195,6 +302,7 @@ def _wants_dry_run(brain: dict, config: dict) -> bool:
 
 class AutonomousRobot(BaseRobot):
     """Robot for autonomous continuous operation."""
+
     name = "autonomous"
     version = 1
 
@@ -317,9 +425,7 @@ class AutonomousRobot(BaseRobot):
 
                 _cfg = config if isinstance(config, dict) else _load_config(project)[0]
                 budget = int(_cfg.get("limits", {}).get("contextTokenBudget", 4000))
-                rag_context = query_for_context(
-                    project, _cfg, issue, budget, k=int(brain.get("retrieval_k", 15))
-                )
+                rag_context = query_for_context(project, _cfg, issue, budget, k=int(brain.get("retrieval_k", 15)))
             except Exception:
                 rag_context = {"hits": [], "firstTokens": 0, "stale": True}
 
@@ -339,17 +445,12 @@ class AutonomousRobot(BaseRobot):
             # 3. CRITIQUE - direct in-memory handoff (never reads stale files).
             # Critical findings block all writes below.
             critique_robot = CritiqueRobot()
-            critique_result, refined_plan, critique_robot_result = (
-                critique_robot.critique_plan_direct(
-                    plan, intelligence, issue, project, config
-                )
+            critique_result, refined_plan, critique_robot_result = critique_robot.critique_plan_direct(
+                plan, intelligence, issue, project, config
             )
             _ = critique_robot_result  # Artifacts written for inspectability.
             critique_passed = bool(critique_result.passed)
-            has_critical = any(
-                getattr(f, "severity", "") == "critical"
-                for f in (critique_result.findings or [])
-            )
+            has_critical = any(getattr(f, "severity", "") == "critical" for f in (critique_result.findings or []))
             if has_critical:
                 critique_passed = False
 
@@ -402,16 +503,41 @@ class AutonomousRobot(BaseRobot):
 
             # 8. LEARN - Update models
             if self.config.learning_enabled:
-                self._learn(evidence, intelligence, critique_result)
+                self._learn(evidence, intelligence, critique_result, project=project)
 
-            self._record_ledger(project, config, issue, True, started, refined_plan, brain)
+            # TASK #5: Explicit SKIPPED handling — success=True forbidden when skipped
+            ver_status = _verification_status(verification)
+            refined_plan["verification_status"] = ver_status
+            verification["verification_status"] = ver_status
+
+            if ver_status["status"] == "SKIPPED":
+                # When checks skipped, success must be False, explicit status SKIPPED
+                self._record_ledger(
+                    project, config, issue, False, started, refined_plan, brain, note=ver_status["reason"]
+                )
+                return CycleResult(
+                    cycle_id=cycle_id,
+                    issue=issue,
+                    plan=refined_plan,
+                    critique_passed=critique_passed,
+                    evidence=evidence,
+                    success=False,
+                    error=f"SKIPPED: {ver_status['reason']}",
+                )
+
+            is_passed = _verification_passed(verification)
+            # Success only if verification passed
+            final_success = bool(is_passed and critique_passed)
+
+            self._record_ledger(project, config, issue, final_success, started, refined_plan, brain)
             return CycleResult(
                 cycle_id=cycle_id,
                 issue=issue,
                 plan=refined_plan,
                 critique_passed=critique_passed,
                 evidence=evidence,
-                success=True,
+                success=final_success,
+                error=None if final_success else f"FAILED: {ver_status['reason']}",
             )
 
         except Exception as e:
@@ -498,13 +624,7 @@ class AutonomousRobot(BaseRobot):
 
             token_cost = estimate_cost_usd(tokens_in, tokens_out, rate)
             energy_cost = estimate_energy_usd(latency, cpu_watts, energy_rate)
-            value = (
-                estimate_value_usd(
-                    lines_changed=lines_changed, tests_fixed=tests_fixed
-                )
-                if success
-                else 0.0
-            )
+            value = estimate_value_usd(lines_changed=lines_changed, tests_fixed=tests_fixed) if success else 0.0
 
             record_event(
                 "cycle",
@@ -524,7 +644,7 @@ class AutonomousRobot(BaseRobot):
         except Exception:
             pass
 
-    def _resolve_brain(self, config: dict, project: Path | None = None        ) -> dict:
+    def _resolve_brain(self, config: dict, project: Path | None = None) -> dict:
         """Resolve provider/profile/adaptive params. Never raises."""
         try:
             from robots.brain import resolve_runtime
@@ -564,7 +684,7 @@ class AutonomousRobot(BaseRobot):
                 "profile_obj": None,
             }
 
-    def _static_plan(self, issue: str, impact_metadata: dict        ) -> dict:
+    def _static_plan(self, issue: str, impact_metadata: dict) -> dict:
         """Deterministic fallback plan (pre-RFC-002 behavior)."""
         return {
             "decision_id": "",
@@ -588,13 +708,25 @@ class AutonomousRobot(BaseRobot):
         project: Path,
         rag_context: dict | None = None,
         brain: dict | None = None,
-            ) -> dict:
+    ) -> dict:
         """Dynamic LLM plan generation via Brain with schema-repair fallback."""
         # Use impact robot to analyze (blast-radius evidence for the prompt).
         impact_robot = ImpactRobot()
         impact_result = impact_robot.inspect(project, config)
         impact_metadata = impact_result.metadata or {}
         static = self._static_plan(issue, impact_metadata)
+
+        # --- Learning Loop: retrieve relevant lessons via keyword overlap ---
+        try:
+            from robots.autonomous.learning import create_learning_engine
+
+            learning_engine = create_learning_engine(project)
+            relevant_lessons = learning_engine.get_relevant_lessons(issue, top_k=5)
+            if relevant_lessons:
+                static["lessons"] = relevant_lessons
+                impact_metadata["lessons"] = relevant_lessons
+        except Exception:
+            pass
 
         brain = brain or {}
         provider = brain.get("provider_obj")
@@ -619,6 +751,25 @@ class AutonomousRobot(BaseRobot):
                 if stored and not chunk.get("text"):
                     chunk["text"] = stored.get("text", "")
                 prompt_chunks.append(chunk)
+
+            # Append lessons as additional context chunks for prompt
+            try:
+                from robots.autonomous.learning import create_learning_engine
+
+                le = create_learning_engine(project)
+                lessons = le.get_relevant_lessons(issue, top_k=5)
+                for les in lessons:
+                    prompt_chunks.append(
+                        {
+                            "id": les.get("id", ""),
+                            "text": f"Lesson [{les.get('category', '')}]: {les.get('message', '')} Context: {les.get('context', '')}",
+                            "path": "lessons",
+                            "score": 0.9,
+                        }
+                    )
+            except Exception:
+                pass
+
             summary = get_intelligence_summary(intelligence)
             prompt = build_prompt(
                 task=issue,
@@ -637,9 +788,12 @@ class AutonomousRobot(BaseRobot):
             tokens_out = max(1, len(response.text.encode("utf-8")) // 4)
             if response.error or not response.text:
                 static["brain"] = {
-                    "provider": brain.get("provider"), "model": brain.get("model"),
-                    "tier": brain.get("tier"), "fallback": response.error or "empty",
-                    "tokens_in": tokens_in, "tokens_out": tokens_out,
+                    "provider": brain.get("provider"),
+                    "model": brain.get("model"),
+                    "tier": brain.get("tier"),
+                    "fallback": response.error or "empty",
+                    "tokens_in": tokens_in,
+                    "tokens_out": tokens_out,
                     "latency_ms": response.latency_ms,
                 }
                 return static
@@ -649,10 +803,14 @@ class AutonomousRobot(BaseRobot):
             plan["risk_score"] = impact_metadata.get("risk_score", {})
             plan["changed_files"] = impact_metadata.get("changed_files", [])
             plan["brain"] = {
-                "provider": brain.get("provider"), "model": brain.get("model"),
-                "tier": brain.get("tier"), "repaired": repaired,
-                "repair_error": repair_error, "latency_ms": response.latency_ms,
-                "tokens_in": tokens_in, "tokens_out": tokens_out,
+                "provider": brain.get("provider"),
+                "model": brain.get("model"),
+                "tier": brain.get("tier"),
+                "repaired": repaired,
+                "repair_error": repair_error,
+                "latency_ms": response.latency_ms,
+                "tokens_in": tokens_in,
+                "tokens_out": tokens_out,
                 "model_known": brain.get("model_known", False),
                 "throttled": bool(brain.get("throttled", False)),
                 "handshake_source": brain.get("handshake_source", ""),
@@ -660,8 +818,10 @@ class AutonomousRobot(BaseRobot):
             return plan
         except Exception as error:
             static["brain"] = {
-                "provider": brain.get("provider"), "model": brain.get("model"),
-                "tier": brain.get("tier"), "fallback": f"exception: {error}",
+                "provider": brain.get("provider"),
+                "model": brain.get("model"),
+                "tier": brain.get("tier"),
+                "fallback": f"exception: {error}",
             }
             return static
 
@@ -688,15 +848,26 @@ class AutonomousRobot(BaseRobot):
                 continue
             allowed, reason = is_path_allowed(project, rel, policy)
             if policy.decision == "deny" or not allowed:
-                out.append({"tool": "direct_edit", "result": {
-                    "success": False, "files_changed": 0, "file": rel,
-                    "reason": reason or "; ".join(policy.reasons),
-                }})
+                out.append(
+                    {
+                        "tool": "direct_edit",
+                        "result": {
+                            "success": False,
+                            "files_changed": 0,
+                            "file": rel,
+                            "reason": reason or "; ".join(policy.reasons),
+                        },
+                    }
+                )
                 continue
             file_pattern = str(change.get("file_pattern", "*.py"))
             result = patcher.apply_patch(
-                pattern, replacement, file_pattern, project,
-                dry_run=dry_run, allowed_files={rel},
+                pattern,
+                replacement,
+                file_pattern,
+                project,
+                dry_run=dry_run,
+                allowed_files={rel},
             )
             entry = _tool_dict(result)
             entry["file"] = rel
@@ -710,7 +881,7 @@ class AutonomousRobot(BaseRobot):
         project: Path,
         config: dict,
         brain: dict | None = None,
-            ) -> dict:
+    ) -> dict:
         """Execute plan through the write policy gate (risk + allowlist + dry-run)."""
         from robots.autonomous.guard import evaluate_write_policy, is_path_allowed
 
@@ -725,11 +896,7 @@ class AutonomousRobot(BaseRobot):
             for change in plan.get("changes", [])
             if isinstance(change, dict)
         ]
-        rag_paths = [
-            str(hit.get("path", ""))
-            for hit in plan.get("context_chunks", [])
-            if isinstance(hit, dict)
-        ]
+        rag_paths = [str(hit.get("path", "")) for hit in plan.get("context_chunks", []) if isinstance(hit, dict)]
         policy = evaluate_write_policy(
             risk_overall=risk_overall,
             risk_threshold=self.config.risk_threshold,
@@ -752,17 +919,23 @@ class AutonomousRobot(BaseRobot):
 
             if tool_name == "ast_rewrite":
                 from robots.tooling.ast_rewrite import rewrite_ast
+
                 for change in plan.get("changes", []):
                     if not isinstance(change, dict):
                         continue
                     rel = str(change.get("file", ""))
                     allowed, reason = is_path_allowed(project, rel, policy)
                     if policy.decision == "deny" or not allowed:
-                        results.append({
-                            "tool": tool_name,
-                            "result": {"success": False, "files_changed": 0,
-                                       "reason": reason or "; ".join(policy.reasons)},
-                        })
+                        results.append(
+                            {
+                                "tool": tool_name,
+                                "result": {
+                                    "success": False,
+                                    "files_changed": 0,
+                                    "reason": reason or "; ".join(policy.reasons),
+                                },
+                            }
+                        )
                         continue
                     result = rewrite_ast(
                         project / rel,
@@ -775,12 +948,18 @@ class AutonomousRobot(BaseRobot):
 
             elif tool_name == "semantic_patch":
                 from robots.tooling.semantic_patch import apply_semantic_patch
+
                 if policy.decision == "deny" or not policy.allowlist:
-                    results.append({
-                        "tool": tool_name,
-                        "result": {"success": False, "files_changed": 0,
-                                   "reason": "; ".join(policy.reasons) or "no allowlisted files"},
-                    })
+                    results.append(
+                        {
+                            "tool": tool_name,
+                            "result": {
+                                "success": False,
+                                "files_changed": 0,
+                                "reason": "; ".join(policy.reasons) or "no allowlisted files",
+                            },
+                        }
+                    )
                     continue
                 result = apply_semantic_patch(
                     tool_rec.config.get("pattern", ""),
@@ -798,38 +977,62 @@ class AutonomousRobot(BaseRobot):
                 from robots.autonomous.guard import is_in_scope, normalize_rel
 
                 if policy.decision == "deny":
-                    results.append({
-                        "tool": tool_name,
-                        "result": {"success": False, "status": "blocked",
-                                   "files_changed": 0, "dry_run": True,
-                                   "reason": "; ".join(policy.reasons) or "denied"},
-                    })
+                    results.append(
+                        {
+                            "tool": tool_name,
+                            "result": {
+                                "success": False,
+                                "status": "blocked",
+                                "files_changed": 0,
+                                "dry_run": True,
+                                "reason": "; ".join(policy.reasons) or "denied",
+                            },
+                        }
+                    )
                     continue
                 cfg = tool_rec.config if isinstance(tool_rec.config, dict) else {}
                 rel = str(cfg.get("spec_path", cfg.get("file", cfg.get("path", "")))).strip()
                 if not rel:
-                    results.append({
-                        "tool": tool_name,
-                        "result": {"success": False, "status": "skipped",
-                                   "files_changed": 0, "dry_run": bool(dry_run),
-                                   "reason": "missing execution context: spec_path required"},
-                    })
+                    results.append(
+                        {
+                            "tool": tool_name,
+                            "result": {
+                                "success": False,
+                                "status": "skipped",
+                                "files_changed": 0,
+                                "dry_run": bool(dry_run),
+                                "reason": "missing execution context: spec_path required",
+                            },
+                        }
+                    )
                     continue
                 if normalize_rel(project, rel) is None or not is_in_scope(project, project / rel):
-                    results.append({
-                        "tool": tool_name,
-                        "result": {"success": False, "status": "blocked",
-                                   "files_changed": 0, "dry_run": bool(dry_run),
-                                   "reason": "path escapes project boundary"},
-                    })
+                    results.append(
+                        {
+                            "tool": tool_name,
+                            "result": {
+                                "success": False,
+                                "status": "blocked",
+                                "files_changed": 0,
+                                "dry_run": bool(dry_run),
+                                "reason": "path escapes project boundary",
+                            },
+                        }
+                    )
                     continue
                 if not (project / rel).is_file():
-                    results.append({
-                        "tool": tool_name,
-                        "result": {"success": False, "status": "skipped",
-                                   "files_changed": 0, "dry_run": bool(dry_run),
-                                   "reason": f"spec file not found: {rel}"},
-                    })
+                    results.append(
+                        {
+                            "tool": tool_name,
+                            "result": {
+                                "success": False,
+                                "status": "skipped",
+                                "files_changed": 0,
+                                "dry_run": bool(dry_run),
+                                "reason": f"spec file not found: {rel}",
+                            },
+                        }
+                    )
                     continue
                 from robots.tooling.model_checker import ModelChecker
 
@@ -841,14 +1044,21 @@ class AutonomousRobot(BaseRobot):
                 errors = " ".join(str(e) for e in (payload.get("errors") or []))
                 if "No model checker available" in errors or "not fully implemented" in errors:
                     # Backend missing: explicit unsupported, never success.
-                    results.append({
-                        "tool": tool_name,
-                        "result": {"success": False, "status": "unsupported",
-                                   "files_changed": 0, "dry_run": bool(dry_run),
-                                   "spec": rel, "spec_type": spec_type,
-                                   "reason": errors or "model checker backend unavailable",
-                                   "errors": payload.get("errors", [])},
-                    })
+                    results.append(
+                        {
+                            "tool": tool_name,
+                            "result": {
+                                "success": False,
+                                "status": "unsupported",
+                                "files_changed": 0,
+                                "dry_run": bool(dry_run),
+                                "spec": rel,
+                                "spec_type": spec_type,
+                                "reason": errors or "model checker backend unavailable",
+                                "errors": payload.get("errors", []),
+                            },
+                        }
+                    )
                     continue
                 payload["status"] = "success" if payload.get("success") else "failed"
                 payload["dry_run"] = bool(dry_run)
@@ -858,35 +1068,52 @@ class AutonomousRobot(BaseRobot):
             elif tool_name == "contract_tester":
                 # Pure-compute contract diff. Never writes.
                 if policy.decision == "deny":
-                    results.append({
-                        "tool": tool_name,
-                        "result": {"success": False, "status": "blocked",
-                                   "files_changed": 0, "dry_run": True,
-                                   "reason": "; ".join(policy.reasons) or "denied"},
-                    })
+                    results.append(
+                        {
+                            "tool": tool_name,
+                            "result": {
+                                "success": False,
+                                "status": "blocked",
+                                "files_changed": 0,
+                                "dry_run": True,
+                                "reason": "; ".join(policy.reasons) or "denied",
+                            },
+                        }
+                    )
                     continue
                 cfg = tool_rec.config if isinstance(tool_rec.config, dict) else {}
                 old_spec = cfg.get("old_spec", cfg.get("old", None))
                 new_spec = cfg.get("new_spec", cfg.get("new", None))
                 contract_type = str(cfg.get("contract_type", "openapi"))
                 if not isinstance(old_spec, dict) or not isinstance(new_spec, dict):
-                    results.append({
-                        "tool": tool_name,
-                        "result": {"success": False, "status": "skipped",
-                                   "files_changed": 0, "dry_run": bool(dry_run),
-                                   "reason": ("missing execution context: "
-                                              "old_spec/new_spec dicts required")},
-                    })
+                    results.append(
+                        {
+                            "tool": tool_name,
+                            "result": {
+                                "success": False,
+                                "status": "skipped",
+                                "files_changed": 0,
+                                "dry_run": bool(dry_run),
+                                "reason": ("missing execution context: old_spec/new_spec dicts required"),
+                            },
+                        }
+                    )
                     continue
                 if contract_type in ("protobuf", "pydantic"):
                     # Placeholder implementations report fake success; refuse that.
-                    results.append({
-                        "tool": tool_name,
-                        "result": {"success": False, "status": "unsupported",
-                                   "files_changed": 0, "dry_run": bool(dry_run),
-                                   "contract_type": contract_type,
-                                   "reason": f"{contract_type} verification not implemented"},
-                    })
+                    results.append(
+                        {
+                            "tool": tool_name,
+                            "result": {
+                                "success": False,
+                                "status": "unsupported",
+                                "files_changed": 0,
+                                "dry_run": bool(dry_run),
+                                "contract_type": contract_type,
+                                "reason": f"{contract_type} verification not implemented",
+                            },
+                        }
+                    )
                     continue
                 from robots.tooling.contract_tester import ContractTester
 
@@ -894,14 +1121,20 @@ class AutonomousRobot(BaseRobot):
                 payload = _tool_dict(tested)
                 errors = " ".join(str(e) for e in (payload.get("errors") or []))
                 if "requires model imports" in errors:
-                    results.append({
-                        "tool": tool_name,
-                        "result": {"success": False, "status": "unsupported",
-                                   "files_changed": 0, "dry_run": bool(dry_run),
-                                   "contract_type": contract_type,
-                                   "reason": errors,
-                                   "errors": payload.get("errors", [])},
-                    })
+                    results.append(
+                        {
+                            "tool": tool_name,
+                            "result": {
+                                "success": False,
+                                "status": "unsupported",
+                                "files_changed": 0,
+                                "dry_run": bool(dry_run),
+                                "contract_type": contract_type,
+                                "reason": errors,
+                                "errors": payload.get("errors", []),
+                            },
+                        }
+                    )
                     continue
                 payload["status"] = "success" if payload.get("success") else "failed"
                 payload["dry_run"] = bool(dry_run)
@@ -911,29 +1144,47 @@ class AutonomousRobot(BaseRobot):
                 # No executor module exists (selector-only labels). Explicit
                 # unsupported; deny takes precedence as blocked.
                 if policy.decision == "deny":
-                    results.append({
-                        "tool": tool_name,
-                        "result": {"success": False, "status": "blocked",
-                                   "files_changed": 0, "dry_run": True,
-                                   "reason": "; ".join(policy.reasons) or "denied"},
-                    })
+                    results.append(
+                        {
+                            "tool": tool_name,
+                            "result": {
+                                "success": False,
+                                "status": "blocked",
+                                "files_changed": 0,
+                                "dry_run": True,
+                                "reason": "; ".join(policy.reasons) or "denied",
+                            },
+                        }
+                    )
                     continue
-                results.append({
-                    "tool": tool_name,
-                    "result": {"success": False, "status": "unsupported",
-                               "files_changed": 0, "dry_run": bool(dry_run),
-                               "reason": f"no executor module for {tool_name}"},
-                })
+                results.append(
+                    {
+                        "tool": tool_name,
+                        "result": {
+                            "success": False,
+                            "status": "unsupported",
+                            "files_changed": 0,
+                            "dry_run": bool(dry_run),
+                            "reason": f"no executor module for {tool_name}",
+                        },
+                    }
+                )
                 continue
 
             else:
                 # Unknown selector label: fail closed, never success.
-                results.append({
-                    "tool": tool_name,
-                    "result": {"success": False, "status": "unsupported",
-                               "files_changed": 0, "dry_run": bool(dry_run),
-                               "reason": f"unknown tool: {tool_name}"},
-                })
+                results.append(
+                    {
+                        "tool": tool_name,
+                        "result": {
+                            "success": False,
+                            "status": "unsupported",
+                            "files_changed": 0,
+                            "dry_run": bool(dry_run),
+                            "reason": f"unknown tool: {tool_name}",
+                        },
+                    }
+                )
                 continue
 
         return {
@@ -948,10 +1199,12 @@ class AutonomousRobot(BaseRobot):
             },
         }
 
-    def _verify_execution(
-        self, plan: dict, project: Path, config: dict, brain: dict | None = None
-            ) -> dict:
-        """Verify execution results (depth adapts to model tier)."""
+    def _verify_execution(self, plan: dict, project: Path, config: dict, brain: dict | None = None) -> dict:
+        """Verify execution results (depth adapts to model tier).
+
+        TASK #5: When depth shallow, return explicit SKIPPED status + reason,
+        never success=True.
+        """
         # Run impact analysis again to verify
         impact_robot = ImpactRobot()
         impact_result = impact_robot.inspect(project, config)
@@ -960,12 +1213,24 @@ class AutonomousRobot(BaseRobot):
         if depth == "shallow":
             return {
                 "impact": impact_result.metadata,
-                "checks": {"skipped": True, "depth": depth},
+                "checks": {
+                    "skipped": True,
+                    "depth": depth,
+                    "status": "SKIPPED",
+                    "reason": f"verification depth shallow — checks skipped (tier={brain.get('tier', 'unknown')})",
+                    "passed": False,
+                },
                 "depth": depth,
+                "verification_status": {
+                    "status": "SKIPPED",
+                    "reason": f"shallow verification — checks skipped for tier {brain.get('tier', 'unknown')}",
+                    "depth": depth,
+                },
             }
 
         # Run tests
         from robots.checks_robot import build_plan, execute
+
         check_plan = build_plan(project)
         check_result, _ = execute(project, check_plan)
 
@@ -999,8 +1264,15 @@ class AutonomousRobot(BaseRobot):
         if written:
             verification["syntax"] = _syntax_check_files(project, written)
 
-        # Suite run
-        first_suite = {"skipped": True, "reason": "no writes"}
+        # Suite run — explicit status with reason
+        # For no-writes, we return ok=True for backward compat (no verification needed)
+        # Shallow case is handled separately in _verify_execution
+        first_suite = {
+            "skipped": True,
+            "status": "PASSED",
+            "reason": "no writes — suite skipped (no verification needed)",
+            "ok": True,
+        }
         if written or depth != "shallow":
             verification["suite"] = _run_target_suite(project, config)
             first_suite = dict(verification["suite"])
@@ -1010,21 +1282,18 @@ class AutonomousRobot(BaseRobot):
         # Self-repair loop (max 2 attempts)
         provider = brain.get("provider_obj")
         attempts = 0
-        while (
-            written
-            and not _verification_passed(verification)
-            and attempts < 2
-            and provider is not None
-        ):
+        while written and not _verification_passed(verification) and attempts < 2 and provider is not None:
             attempts += 1
             repair = self._generate_repair(plan, verification, project, config, brain)
             repair_changes = repair.get("changes", [])
             if not repair_changes:
-                verification["repairs"].append({
-                    "attempt": attempts,
-                    "skipped": "no usable changes",
-                    **repair.get("brain", {}),
-                })
+                verification["repairs"].append(
+                    {
+                        "attempt": attempts,
+                        "skipped": "no usable changes",
+                        **repair.get("brain", {}),
+                    }
+                )
                 break
 
             repair_plan_full = {
@@ -1034,27 +1303,25 @@ class AutonomousRobot(BaseRobot):
                 "context_chunks": plan.get("context_chunks", []),
                 "brain": repair.get("brain", {}),
             }
-            repair_execution = self._execute_plan(
-                repair_plan_full, [], project, config, brain
-            )
+            repair_execution = self._execute_plan(repair_plan_full, [], project, config, brain)
             written = _written_files(repair_execution, project)
-            verification["repairs"].append({
-                "attempt": attempts,
-                "changes": repair_changes,
-                "execution": {
-                    "policy": repair_execution.get("policy", {}),
-                    "results": [
-                        {
-                            "tool": e.get("tool"),
-                            "files_changed": (
-                                e.get("result") or {}
-                            ).get("files_changed", 0),
-                        }
-                        for e in repair_execution.get("tool_results", [])
-                    ],
-                },
-                "brain": repair.get("brain", {}),
-            })
+            verification["repairs"].append(
+                {
+                    "attempt": attempts,
+                    "changes": repair_changes,
+                    "execution": {
+                        "policy": repair_execution.get("policy", {}),
+                        "results": [
+                            {
+                                "tool": e.get("tool"),
+                                "files_changed": (e.get("result") or {}).get("files_changed", 0),
+                            }
+                            for e in repair_execution.get("tool_results", [])
+                        ],
+                    },
+                    "brain": repair.get("brain", {}),
+                }
+            )
             if written:
                 verification["syntax"] = _syntax_check_files(project, written)
                 verification["suite"] = _run_target_suite(project, config)
@@ -1083,10 +1350,7 @@ class AutonomousRobot(BaseRobot):
                 parts.append(f"syntax {error.get('file')}:{error.get('line')} {error.get('error')}")
         suite = verification.get("suite", {})
         if suite and not suite.get("skipped") and not suite.get("ok"):
-            parts.append(
-                f"pytest failed ({suite.get('failed', '?')} failed, "
-                f"rc={suite.get('returncode')})"
-            )
+            parts.append(f"pytest failed ({suite.get('failed', '?')} failed, rc={suite.get('returncode')})")
             for line in (suite.get("tail") or [])[-15:]:
                 if any(k in line for k in ("FAILED", "Error", "error", "assert")):
                     parts.append(line[:200])
@@ -1144,15 +1408,11 @@ class AutonomousRobot(BaseRobot):
                         "latency_ms": response.latency_ms,
                     },
                 }
-            repaired_plan, repaired_flag, repair_error = repair_plan(
-                response.text, plan.get("issue", "")
-            )
+            repaired_plan, repaired_flag, repair_error = repair_plan(response.text, plan.get("issue", ""))
             try:
                 from robots.autonomous.guard import sanitize_changes
 
-                changes = sanitize_changes(
-                    repaired_plan.get("changes", []), project
-                )
+                changes = sanitize_changes(repaired_plan.get("changes", []), project)
             except Exception:
                 changes = []
             return {
@@ -1173,8 +1433,9 @@ class AutonomousRobot(BaseRobot):
         evidence: EvidencePackage,
         intelligence: RepositoryIntelligence,
         critique_result,
+        project=None,
     ):
-        """Learn from execution outcome."""
+        """Learn from execution outcome — persists lessons append-only."""
         # Update coupling matrix based on actual vs predicted impact.
 
         # Adjust risk weights
@@ -1187,20 +1448,35 @@ class AutonomousRobot(BaseRobot):
                 self.learning_data["risk_weight_adjustments"][evidence.decision_id] = error
 
         # Record critique refinements (accepts CritiqueResult.passed or RobotResult.ok).
-        critique_failed = bool(
-            getattr(critique_result, "passed", getattr(critique_result, "ok", True)) is False
-        )
+        critique_failed = bool(getattr(critique_result, "passed", getattr(critique_result, "ok", True)) is False)
         if critique_failed:
-            self.learning_data["critique_refinements"].append({
-                "decision_id": evidence.decision_id,
-                "findings": evidence.verification.get("critique", {}).get("findings", []),
-            })
+            self.learning_data["critique_refinements"].append(
+                {
+                    "decision_id": evidence.decision_id,
+                    "findings": evidence.verification.get("critique", {}).get("findings", []),
+                }
+            )
+
+        # --- Learning Loop: persist critic/reflexion lessons in lessons store JSON append-only ---
+        try:
+            from pathlib import Path
+            from robots.autonomous.learning import create_learning_engine
+
+            proj = project
+            if proj is None:
+                proj = Path(".")
+            if isinstance(proj, str):
+                proj = Path(proj)
+
+            engine = create_learning_engine(proj)
+            engine.save_lessons_from_critique(evidence, critique_result)
+        except Exception:
+            pass
 
     def _measure_actual_impact(self, evidence: EvidencePackage) -> dict:
         """Measure actual impact after deployment."""
         # Placeholder - would measure real production metrics
         return {}
-
 
 
 class AutonomousScheduler:

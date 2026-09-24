@@ -11,15 +11,14 @@ from typing import Literal
 @dataclass(slots=True)
 class ADR:
     """Architectural Decision Record."""
+
     id: str  # ADR-0001
     title: str
     status: Literal["proposed", "accepted", "deprecated", "superseded"]
     context: str
     decision: str
     alternatives: list[str] = field(default_factory=list)
-    consequences: dict[str, list[str]] = field(default_factory=lambda: {
-        "positive": [], "negative": [], "neutral": []
-    })
+    consequences: dict[str, list[str]] = field(default_factory=lambda: {"positive": [], "negative": [], "neutral": []})
     links: list[str] = field(default_factory=list)
     created: str = field(default_factory=lambda: datetime.utcnow().isoformat())
     supersedes: str | None = None
@@ -119,6 +118,7 @@ class ADRRegistry:
         # Also save as JSON for programmatic access
         json_path = self.adr_dir / f"{adr.id}.json"
         import json
+
         json_path.write_text(json.dumps(adr.to_dict(), indent=2), encoding="utf-8")
 
         self._cache[adr.id] = adr
@@ -133,6 +133,7 @@ class ADRRegistry:
             json_path = directory / f"{adr_id}.json"
             if json_path.is_file():
                 import json
+
                 adr = ADR.from_dict(json.loads(json_path.read_text()))
                 self._cache[adr_id] = adr
                 return adr
@@ -145,6 +146,7 @@ class ADRRegistry:
         for json_file in self.adr_dir.glob("*.json"):
             try:
                 import json
+
                 adr = ADR.from_dict(json.loads(json_file.read_text()))
                 adrs.append(adr)
             except Exception:
@@ -165,6 +167,7 @@ def create_adr_from_plan(
     """Create an ADR from a plan."""
     if not decision_id:
         import uuid
+
         decision_id = f"ADR-{uuid.uuid4().hex[:8].upper()}"
 
     registry = ADRRegistry(project)

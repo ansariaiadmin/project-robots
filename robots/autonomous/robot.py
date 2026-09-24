@@ -20,6 +20,7 @@ from robots.protocol import BaseRobot, Plan, RobotResult, register_robot
 
 class AutonomousMainRobot(BaseRobot):
     """Main autonomous robot for CLI integration."""
+
     name = "autonomous"
     version = 1
 
@@ -36,7 +37,8 @@ class AutonomousMainRobot(BaseRobot):
             _, profile, adaptive = resolve_runtime(config, fast=True)
             return {
                 "provider": config.get("brain", {}).get("provider", "")
-                if isinstance(config.get("brain"), dict) else "",
+                if isinstance(config.get("brain"), dict)
+                else "",
                 "tier": profile.tier,
                 "model_known": profile.model_known,
                 "max_cycles": adaptive["max_cycles"],
@@ -68,19 +70,24 @@ class AutonomousMainRobot(BaseRobot):
 
         results = run_autonomous(project, config, issues, max_cycles)
 
-        output = write_json(project, "autonomous", "latest.json", {
-            "cycles": len(results),
-            "results": [
-                {
-                    "cycle_id": r.cycle_id,
-                    "issue": r.issue,
-                    "success": r.success,
-                    "evidence_id": r.evidence.decision_id if r.evidence else None,
-                    "error": r.error,
-                }
-                for r in results
-            ],
-        })
+        output = write_json(
+            project,
+            "autonomous",
+            "latest.json",
+            {
+                "cycles": len(results),
+                "results": [
+                    {
+                        "cycle_id": r.cycle_id,
+                        "issue": r.issue,
+                        "success": r.success,
+                        "evidence_id": r.evidence.decision_id if r.evidence else None,
+                        "error": r.error,
+                    }
+                    for r in results
+                ],
+            },
+        )
 
         all_success = all(r.success for r in results)
 
@@ -108,13 +115,18 @@ class AutonomousMainRobot(BaseRobot):
 
         result = self.robot.run_cycle(project, config, issue)
 
-        output = write_json(project, "autonomous", "latest.json", {
-            "cycle_id": result.cycle_id,
-            "issue": result.issue,
-            "success": result.success,
-            "evidence_id": result.evidence.decision_id if result.evidence else None,
-            "error": result.error,
-        })
+        output = write_json(
+            project,
+            "autonomous",
+            "latest.json",
+            {
+                "cycle_id": result.cycle_id,
+                "issue": result.issue,
+                "success": result.success,
+                "evidence_id": result.evidence.decision_id if result.evidence else None,
+                "error": result.error,
+            },
+        )
 
         return RobotResult(
             ok=result.success,
@@ -228,21 +240,26 @@ class AutonomousMainRobot(BaseRobot):
         if not pending:
             self._clear_queue(queue_path)
 
-        output = write_json(project, "autonomous", "latest.json", {
-            "mode": "continuous",
-            "cycles": len(results),
-            "results": [
-                {
-                    "cycle_id": r.cycle_id,
-                    "issue": r.issue,
-                    "success": r.success,
-                    "evidence_id": r.evidence.decision_id if r.evidence else None,
-                    "error": r.error,
-                }
-                for r in results
-            ],
-            "remaining_issues": len(pending),
-        })
+        output = write_json(
+            project,
+            "autonomous",
+            "latest.json",
+            {
+                "mode": "continuous",
+                "cycles": len(results),
+                "results": [
+                    {
+                        "cycle_id": r.cycle_id,
+                        "issue": r.issue,
+                        "success": r.success,
+                        "evidence_id": r.evidence.decision_id if r.evidence else None,
+                        "error": r.error,
+                    }
+                    for r in results
+                ],
+                "remaining_issues": len(pending),
+            },
+        )
 
         all_success = all(r.success for r in results)
 

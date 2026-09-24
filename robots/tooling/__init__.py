@@ -7,9 +7,19 @@ from robots.tooling.model_checker import ModelChecker, run_model_check, ModelChe
 from robots.tooling.contract_tester import ContractTester, test_contracts, ContractTestResult
 
 __all__ = [
-    "ToolSelector", "select_tools", "ToolRecommendation",
-    "ASTRewriter", "rewrite_ast", "RewriteResult",
-    "SemanticPatcher", "apply_semantic_patch", "PatchResult",
-    "ModelChecker", "run_model_check", "ModelCheckResult",
-    "ContractTester", "test_contracts", "ContractTestResult",
+    "ToolSelector",
+    "select_tools",
+    "ToolRecommendation",
+    "ASTRewriter",
+    "rewrite_ast",
+    "RewriteResult",
+    "SemanticPatcher",
+    "apply_semantic_patch",
+    "PatchResult",
+    "ModelChecker",
+    "run_model_check",
+    "ModelCheckResult",
+    "ContractTester",
+    "test_contracts",
+    "ContractTestResult",
 ]

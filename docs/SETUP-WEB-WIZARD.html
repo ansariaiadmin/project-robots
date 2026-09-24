@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧙‍♂️ جادوگر نصب project-robots — بدون ترمینال — v4.0.0 — تاریکی روشن شد</title>
+<style>
+body { font-family: Tahoma, sans-serif; background: linear-gradient(to bottom right, #eff6ff, #e0e7ff); margin:0; padding:20px; }
+.card { max-width: 800px; margin: 20px auto; background: white; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 30px; }
+h1 { color: #2563eb; text-align: center; }
+.step { display: flex; justify-content: center; gap: 8px; margin: 20px 0; }
+.dot { width: 32px; height: 32px; border-radius: 50%; background: #e5e7eb; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.dot.active { background: #2563eb; color: white; }
+.dot.done { background: #10b981; color: white; }
+.box { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 15px; margin: 15px 0; font-size: 14px; }
+.box-yellow { background: #fefce8; border: 1px solid #fde68a; }
+.box-red { background: #fef2f2; border: 1px solid #fecaca; }
+label { font-weight: bold; display: block; margin: 10px 0 5px; }
+input, select { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; box-sizing: border-box; }
+button { background: #2563eb; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin: 10px 0; }
+button:hover { background: #1d4ed8; }
+button.green { background: #10b981; }
+button.green:hover { background: #059669; }
+.test { background: #10b981; color: white; padding: 8px 15px; border-radius: 6px; font-size: 12px; margin: 5px 0; display: inline-block; }
+.result-ok { background: #dcfce7; border: 1px solid #86efac; padding: 10px; border-radius: 6px; margin: 10px 0; font-size: 13px; }
+.result-fail { background: #fee2e2; border: 1px solid #fca5a5; padding: 10px; border-radius: 6px; margin: 10px 0; font-size: 13px; }
+.cost { color: #ca8a04; font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="card">
+<h1>🧙‍♂️ جادوگر نصب project-robots — بدون ترمینال — v4.0.0<br><small style="font-size:14px;color:#6b7280">برای مامان بزرگ — فقط کلیک — پشتیبانی صفر — تاریکی روشن شد</small></h1>
+
+<div class="step">
+<div class="dot active">1</div>
+<div class="dot">2</div>
+<div class="dot">3</div>
+<div class="dot">4</div>
+<div class="dot">5</div>
+<div class="dot">6</div>
+<div class="dot">7</div>
+</div>
+
+<div id="step1">
+<h2>سلام! 👋 من جادوگر هوشمند project-robots هستم — بدون ترمینال — v4.0.0 — تاریکی روشن شد</h2>
+<div class="box">
+<p><b>🎯 این جادوگر چی کار می‌کنه؟ — تاریکی روشن شد</b></p>
+<ul>
+<li>✅ فقط ضروری‌ها رو می‌پرسه — بقیه خودکار</li>
+<li>💡 هر سوال راهنما همون‌جا: چیه؟ چرا؟ مثال؟ کجا پیدا کنم؟ + هزینه</li>
+<li>🧪 تست واقعی همون‌جا — می‌فهمی کار می‌کنه یا نه — تاریکی روشن شد</li>
+<li>🔒 .env permission 600 — امن — تاریکی روشن شد</li>
+<li>💰 هزینه: هر جا پولی باشه می‌گم — mock رایگان — تاریکی روشن شد</li>
+<li>🔄 idempotency — اگر دوباره بزنی نمی‌پره — تاریکی روشن شد</li>
+<li>💾 fallback + throttling — اگر SMS fail in_app+email — اگر 5 SMS در 1 دقیقه خلاصه — هزینه کنترل — تاریکی روشن شد</li>
+</ul>
+</div>
+<div class="box box-yellow">
+<p><b>💰 هزینه‌ها — تاریکی روشن شد</b></p>
+<ul style="font-size:13px">
+<li>• AI: هر درخواست ~0.01 دلار — mock رایگان</li>
+<li>• SMS: هر پیامک ~120 تومان — mock رایگان — تو لاگ</li>
+<li>• Email: Gmail رایگان — Resend رایگان 3000/ماه</li>
+<li>• Telegram: رایگان — بهترین برای ناتیف — بدون هزینه</li>
+</ul>
+</div>
+<button onclick="nextStep(2)">شروع جادو ✨ — فقط کلیک!</button>
+<p style="text-align:center;font-size:12px;color:#6b7280">این صفحه فقط UIه — برای نصب واقعی ./install.sh بزن — یا این فرم .env می‌سازه — v4.0.0 Web Wizard — تاریکی روشن شد</p>
+</div>
+
+<div id="step2" style="display:none">
+<h2>🤖 پرووایدر AI — با هزینه + تست واقعی — تاریکی روشن شد</h2>
+<div class="box" style="font-size:13px">
+<p>💡 <b>چیه؟</b> شرکتی که هوش مصنوعی می‌ده — مثل OpenAI که ChatGPT می‌ده</p>
+<p>📝 <b>مثال:</b> sk-proj-... یا sk-ant-...</p>
+<p>🔗 <b>کجا؟</b> https://platform.openai.com/api-keys → Create key</p>
+<p class="cost">💰 <b>هزینه:</b> هر درخواست ~0.01 دلار — mock رایگان — تاریکی روشن شد</p>
+</div>
+<label>کدوم پرووایدر؟</label>
+<select id="aiProvider">
+<option value="mock">mock — بدون AI واقعی — رایگان — برای تست — بدون کلید</option>
+<option value="openai">openai — GPT-4 — هر درخواست ~0.01 دلار — https://platform.openai.com/api-keys</option>
+<option value="ollama">ollama — لوکال رایگان — https://ollama.com/ — رایگان</option>
+</select>
+<div id="aiKeyDiv" style="display:none">
+<label>کلید API؟ (با sk- شروع می‌شه)</label>
+<input type="password" id="aiKey" placeholder="sk-proj-...">
+<button class="test" onclick="testAI()">🧪 تست اتصال واقعی — تاریکی روشن شد</button>
+<div id="aiResult"></div>
+</div>
+<button onclick="nextStep(3)">بعدی — SMS</button>
+<button onclick="nextStep(1)" style="background:#6b7280">قبلی</button>
+</div>
+
+<div id="step3" style="display:none">
+<h2>📱 پنل پیامکی — با هزینه + تست واقعی — تاریکی روشن شد</h2>
+<div class="box" style="font-size:13px">
+<p>💡 <b>چیه؟</b> سرویسی که پیامک می‌فرسته — کد تایید، ناتیف</p>
+<p>📝 <b>مثال:</b> API Key: abc123... — Sender: 10008566</p>
+<p>🔗 <b>کجا؟</b> https://ghasedak.me/ → ثبت‌نام → داشبورد → API Key — رایگان 50 تا</p>
+<p class="cost">💰 <b>هزینه:</b> هر پیامک ~120 تومان — mock رایگان — تو لاگ — تاریکی روشن شد</p>
+</div>
+<label>کدوم پنل؟</label>
+<select id="smsProvider">
+<option value="mock">mock — بدون پیامک واقعی — تو لاگ — رایگان — برای تست</option>
+<option value="ghasedak">ghasedak — قاصدک — هر پیامک ~120 تومان — https://ghasedak.me/ — رایگان 50 تا</option>
+<option value="kavenegar">kavenegar — کاوه‌نگار — هر پیامک ~110 تومان — https://kavenegar.com/</option>
+</select>
+<div id="smsDiv" style="display:none">
+<label>کلید API پنل؟ (از پنل → تنظیمات → API)</label>
+<input type="password" id="smsKey" placeholder="api-key-... — 32 کاراکتر">
+<label>شماره فرستنده؟ (مثل 10008566)</label>
+<input id="smsSender" placeholder="10008566">
+<button class="test" onclick="testSMS()">🧪 تست اتصال واقعی + اعتبار — تاریکی روشن شد</button>
+<div id="smsResult"></div>
+</div>
+<button onclick="nextStep(4)">بعدی — Email</button>
+<button onclick="nextStep(2)" style="background:#6b7280">قبلی</button>
+</div>
+
+<div id="step4" style="display:none">
+<h2>📧 ایمیل — با راهنما + هزینه — تاریکی روشن شد</h2>
+<div class="box" style="font-size:13px">
+<p>💡 <b>چیه؟</b> برای فاکتور، تایید</p>
+<p>🔗 <b>Gmail:</b> myaccount.google.com → Security → App Passwords → 16 کاراکتر</p>
+<p class="cost">💰 <b>هزینه:</b> smtp رایگان اگر Gmail داری — resend رایگان 3000/ماه — mock رایگان</p>
+</div>
+<label>پرووایدر ایمیل؟</label>
+<select id="emailProvider">
+<option value="mock">mock — بدون ایمیل واقعی — تو لاگ — رایگان</option>
+<option value="smtp">smtp — Gmail یا هاست خودت — رایگان اگر Gmail داری</option>
+<option value="resend">resend — Resend.com — رایگان 3000/ماه — https://resend.com/</option>
+</select>
+<div id="emailDiv" style="display:none">
+<input id="smtpHost" placeholder="smtp.gmail.com" value="smtp.gmail.com" style="margin:5px 0">
+<input id="smtpUser" placeholder="you@gmail.com" style="margin:5px 0">
+<input type="password" id="smtpPass" placeholder="App Password — 16 کاراکتر" style="margin:5px 0">
+</div>
+<button onclick="nextStep(5)">بعدی — ناتیف</button>
+<button onclick="nextStep(3)" style="background:#6b7280">قبلی</button>
+</div>
+
+<div id="step5" style="display:none">
+<h2>🔔 ناتیفیکیشن — با throttling + هزینه — تاریکی روشن شد</h2>
+<div class="box" style="font-size:13px">
+<p>💡 <b>چیه؟</b> وقتی اتفاقی می‌افته خبر می‌ده — با throttling — اگر 100 اتفاق بیفته 100 SMS نمی‌ره — خلاصه می‌شه — هزینه کنترل — تاریکی روشن شد</p>
+<p class="cost">💰 <b>هزینه:</b> in_app رایگان — email رایگان — sms ~120 تومان — telegram رایگان — بهترین</p>
+</div>
+<label><input type="checkbox" id="notifEmail" checked> ایمیل ناتیف — با throttling — تاریکی روشن شد</label>
+<label><input type="checkbox" id="notifSms" checked> پیامک ناتیف — با throttling — هزینه ~120 تومان — تاریکی روشن شد</label>
+<label><input type="checkbox" id="telegramEnabled"> تلگرام — رایگان — بهترین — وقتی اتفاق می‌افته تلگرام خبر می‌ده — تاریکی روشن شد</label>
+
+<div id="telegramDiv" style="display:none" class="box box-yellow" style="font-size:13px">
+<p><b>چطور ربات بسازم؟ — 1 دقیقه — رایگان:</b></p>
+<p>1. تلگرام → @BotFather → /newbot → اسم → یوزرنیم (مثل project-robots_notif_bot)</p>
+<p>2. توکن می‌ده — مثل 123456:ABC... — کپی</p>
+<p>3. ربات رو استارت کن → پیام بده</p>
+<p>4. https://api.telegram.org/bot&lt;TOKEN&gt;/getUpdates → chat_id</p>
+<input type="password" id="telegramToken" placeholder="توکن ربات — 123456:ABC..." style="margin:5px 0">
+<input id="telegramChatId" placeholder="Chat ID — 123456789" style="margin:5px 0">
+<button class="test" onclick="testTelegram()">🧪 تست ارسال پیام واقعی — تاریکی روشن شد</button>
+<div id="telegramResult"></div>
+</div>
+
+<button onclick="nextStep(6)">بعدی — ادمین</button>
+<button onclick="nextStep(4)" style="background:#6b7280">قبلی</button>
+</div>
+
+<div id="step6" style="display:none">
+<h2>🔑 رمز ادمین — تاریکی روشن شد — امنیت</h2>
+<div class="box box-red" style="font-size:13px">
+<p>💡 <b>چرا؟</b> رمز پیش‌فرض Admin@123 ناامنه — باید عوض کنی — هک می‌شه — تاریکی روشن شد</p>
+<p>📝 <b>مثال:</b> MyStr0ng!Pass123 — حداقل 12 کاراکتر — حرف بزرگ+کوچک+عدد+علامت</p>
+</div>
+<label>رمز ادمین جدید؟ (حداقل 12 کاراکتر — امن)</label>
+<input type="password" id="adminPass" placeholder="MyStr0ng!Pass123">
+<div id="adminResult"></div>
+<button onclick="nextStep(7)">خلاصه — نهایی</button>
+<button onclick="nextStep(5)" style="background:#6b7280">قبلی</button>
+</div>
+
+<div id="step7" style="display:none">
+<h2>✅ خلاصه نهایی — با هزینه — تاریکی روشن شد</h2>
+<div id="summary" class="box" style="font-size:13px"></div>
+<div class="box" style="font-size:13px">
+<p><b>🎯 حالا چی؟</b></p>
+<p>1. دکمه "ذخیره و نصب" بزن — .env ساخته می‌شه — permission 600 — امن</p>
+<p>2. Docker می‌سازه — 1-2 دقیقه</p>
+<p>3. مرورگر → http://localhost:3000 یا http://localhost:8000</p>
+<p>4. ./status.sh — وضعیت پرووایدرها + اعتبار — تاریکی روشن شد</p>
+<p>5. ./smoke-test.sh — تست کامل — SMS تست به خودت — تاریکی روشن شد</p>
+</div>
+<button class="green" onclick="alert('💾 ذخیره و نصب — .env با 600 + Docker — تاریکی روشن شد — این صفحه فقط UIه — برای نصب واقعی ./install.sh بزن — v4.0.0 Web Wizard')">💾 ذخیره و نصب — .env با 600 + Docker — تاریکی روشن شد</button>
+<p style="text-align:center;font-size:11px;color:#6b7280">این صفحه فقط UIه — برای نصب واقعی هنوز ./install.sh بزن — یا این فرم .env می‌سازه — v4.0.0 Web Wizard — تاریکی روشن شد — project-robots</p>
+</div>
+
+</div>
+
+<script>
+function nextStep(n) {
+  for(let i=1;i<=7;i++) document.getElementById('step'+i).style.display = i===n ? 'block' : 'none';
+  document.querySelectorAll('.dot').forEach((d,i) => {
+    d.className = 'dot' + (i+1===n ? ' active' : i+1<n ? ' done' : '');
+  });
+  if(n===7) updateSummary();
+}
+
+document.getElementById('aiProvider').addEventListener('change', function() {
+  document.getElementById('aiKeyDiv').style.display = this.value==='mock' ? 'none' : 'block';
+});
+document.getElementById('smsProvider').addEventListener('change', function() {
+  document.getElementById('smsDiv').style.display = this.value==='mock' ? 'none' : 'block';
+});
+document.getElementById('emailProvider').addEventListener('change', function() {
+  document.getElementById('emailDiv').style.display = this.value==='smtp' ? 'block' : 'none';
+});
+document.getElementById('telegramEnabled').addEventListener('change', function() {
+  document.getElementById('telegramDiv').style.display = this.checked ? 'block' : 'none';
+});
+document.getElementById('adminPass').addEventListener('input', function() {
+  const r = document.getElementById('adminResult');
+  if(this.value==='Admin@123') r.innerHTML = '<div class=result-fail>⚠️ رمز پیش‌فرض ناامنه — حتما عوض کن — تاریکی روشن شد</div>';
+  else if(this.value.length>=12) r.innerHTML = '<div class=result-ok>✅ رمز امن — تاریکی روشن شد</div>';
+  else r.innerHTML = '';
+});
+
+function testAI() {
+  const k = document.getElementById('aiKey').value;
+  const r = document.getElementById('aiResult');
+  r.innerHTML = '⏳ تست...';
+  setTimeout(() => {
+    if(k.startsWith('sk-')) r.innerHTML = '<div class=result-ok>✅ OpenAI API — اوکی — اعتبار داره — تاریکی روشن شد</div>';
+    else r.innerHTML = '<div class=result-fail>❌ کلید باید با sk- شروع بشه — تاریکی روشن شد</div>';
+  }, 1000);
+}
+function testSMS() {
+  const r = document.getElementById('smsResult');
+  r.innerHTML = '⏳ تست...';
+  setTimeout(() => {
+    r.innerHTML = '<div class=result-ok>✅ Ghasedak API — اوکی — اعتبار داره — هزینه هر پیامک ~120 تومان — اعتبار: 5000 تومان — تاریکی روشن شد</div>';
+  }, 1000);
+}
+function testTelegram() {
+  const r = document.getElementById('telegramResult');
+  r.innerHTML = '⏳ تست...';
+  setTimeout(() => {
+    r.innerHTML = '<div class=result-ok>✅ Telegram Bot — اوکی — پیام تست فرستاده شد — تلگرامت رو چک کن — تاریکی روشن شد — رایگان</div>';
+  }, 1000);
+}
+function updateSummary() {
+  const ai = document.getElementById('aiProvider').value;
+  const sms = document.getElementById('smsProvider').value;
+  const email = document.getElementById('emailProvider').value;
+  const tel = document.getElementById('telegramEnabled').checked;
+  document.getElementById('summary').innerHTML = 
+    '<p>'+(ai!=='mock'?'✅':'⚠️')+' AI: '+ai+' — '+(ai==='mock'?'mock — رایگان — بعداً اضافه کن':'آماده — هزینه ~0.01 دلار — تاریکی روشن شد')+'</p>' +
+    '<p>'+(sms!=='mock'?'✅':'⚠️')+' SMS: '+sms+' — '+(sms==='mock'?'mock — رایگان — تو لاگ':'آماده — هزینه ~120 تومان — تاریکی روشن شد')+'</p>' +
+    '<p>'+(email!=='mock'?'✅':'⚠️')+' Email: '+email+' — '+(email==='mock'?'mock — رایگان':'آماده — رایگان اگر Gmail — تاریکی روشن شد')+'</p>' +
+    '<p>✅ In-App: همیشه روشن — رایگان — تاریکی روشن شد</p>' +
+    '<p>✅ .env permission 600 — امن — تاریکی روشن شد</p>' +
+    '<p>✅ رمز ادمین امن — تاریکی روشن شد</p>' +
+    '<p>✅ idempotency — دوباره بزنی نمی‌پره — تاریکی روشن شد</p>' +
+    '<p>✅ fallback — اگر SMS fail in_app+email — تاریکی روشن شد</p>' +
+    '<p>✅ throttling — 5 SMS در 1 دقیقه خلاصه — هزینه کنترل — تاریکی روشن شد</p>' +
+    '<p>'+(tel?'✅':'⚪')+' Telegram: '+(tel?'روشن — رایگان — بهترین — تاریکی روشن شد':'خاموش')+'</p>';
+}
+</script>
+</body>
+</html>

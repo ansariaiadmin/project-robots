@@ -1,5 +1,8 @@
+# تاریکی روشن شد — v3.1.0 — NOTIF + SMS + TELEGRAM + fallback + throttling — .env شامل همه — docker-compose env_file .env را می‌خواند — امن
 version: '3.9'
 services:
+  # تاریکی روشن شد — .env با NOTIF + SMS + TELEGRAM + fallback + throttling — v3.1.0
+
   app:
     build:
       context: .

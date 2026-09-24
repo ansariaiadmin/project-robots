@@ -33,7 +33,7 @@ Level 5 Autonomous Engineer + Notification — Zero Support
 BANNER
 echo -e "${NC}"
 echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}  🧙‍♂️ جادوگر نصب Project Robots v3.0.0 — پشتیبانی صفر${NC}"
+echo -e "${BLUE}  🧙‍♂️ جادوگر نصب Project Robots v3.1.0 — پشتیبانی صفر — تاریکی روشن شد${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo ""
 echo -e "${YELLOW}سلام! 👋 مهندس خودکار سطح ۵ — تحلیل + پلان + اجرا + تست + نقد + Web UI + ناتیف — سقف!${NC}"
@@ -68,8 +68,19 @@ fi
 sleep 1
 
 echo -e "${BLUE}[6/6] ⚙️ .env + 🏗️ نصب${NC}"
+if [ -f .env ]; then
+  echo -e "${YELLOW}  .env وجود دارد — keep/new/backup? — تاریکی روشن شد — idempotency${NC}"
+  read -p "   keep (نگه دار) / new (جدید) / backup (بکاپ بعد جدید) [keep]: " KEEP_ENV
+  [ -z "$KEEP_ENV" ] && KEEP_ENV="keep"
+  if [ "$KEEP_ENV" = "backup" ]; then cp .env .env.backup.$(date +%Y%m%d_%H%M%S); echo -e "${GREEN}✅ بکاپ گرفته شد — تاریکی روشن شد${NC}"; KEEP_ENV="new"; fi
+  if [ "$KEEP_ENV" = "keep" ]; then echo -e "${GREEN}✅ .env نگه داشته شد — idempotency — تاریکی روشن شد${NC}"; SKIP_ENV="true"; else SKIP_ENV="false"; fi
+else
+  SKIP_ENV="false"
+fi
+
+if [ "$SKIP_ENV" = "false" ]; then
 cat > .env <<EOF
-# project-robots — .env — جادوگر v3.0.0 — پشتیبانی صفر — $(date)
+# project-robots — .env — جادوگر v3.1.0 — پشتیبانی صفر — تاریکی روشن شد — $(date)
 PYTHONPATH=.
 
 # LLM — برای نقد — چیه؟ هوش مصنوعی برای نقد کد — گزینه: ollama, openai, mock
@@ -87,7 +98,13 @@ TELEGRAM_BOT_TOKEN=${TELEGRAM_TOKEN}
 TELEGRAM_CHAT_ID=${TELEGRAM_CHAT}
 EOF
 
-ok ".env ساخته شد"
+chmod 600 .env 2>/dev/null || true
+ok ".env ساخته شد — permission 600 — امن — تاریکی روشن شد"
+fi
+if [ "$SKIP_ENV" = "true" ]; then
+  chmod 600 .env 2>/dev/null || true
+  echo -e "${GREEN}✅ .env permission 600 — امن — تاریکی روشن شد${NC}"
+fi — امن — تاریکی روشن شد"
 
 if [ -f docker-compose.yml ]; then
   docker compose up --build -d 2>&1 | tail -n 10

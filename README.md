@@ -26,7 +26,7 @@ chmod +x install.sh
 - **آپدیت:** `./update.sh` (بکاپ خودکار + آپدیت + سلامت چک)
 - **وضعیت:** `./status.sh` | **لاگ:** `./logs.sh` | **توقف:** `./stop.sh`
 
-**ویژگی‌های نسخه v1.0.1 / v0.9.1:**
+**ویژگی‌های نسخه v1.0.2 (Strict Final 10/10 True):**
 - ✅ نصب خودکار تمیز (clean install) — چک Docker، ساخت .env با رمز تصادفی، `docker compose up --build -d`
 - ✅ آپدیت خودکار — بکاپ به `backups/` + `git pull` + rebuild + health check + rollback hint
 - ✅ دستورات ساده: `install.sh`, `update.sh`, `start.sh`, `stop.sh`, `status.sh`, `logs.sh`, `backup.sh`

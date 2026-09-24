@@ -99,7 +99,7 @@ cp .env.example .env
 ## Versions
 
 - v1.0.0 / v0.9.0: Initial 10/10 final
-- v1.0.1 / v0.9.1: Non-technical + auto install + auto update (this version)
+- v1.0.2 (Strict Final 10/10 True): Non-technical + auto install + auto update (this version)
 
 Install specific version:
 ```bash

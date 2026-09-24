@@ -1,0 +1,31 @@
+{
+  "name": "PROJECT_ROBOTS — Level 5 Autonomous Software Engineer",
+  "short_name": "Robots",
+  "description": "Level 5 Autonomous Software Engineer — Autonomous loop + ledger + PWA + Mobile — سقف 10/10",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0e14",
+  "theme_color": "#f4c85d",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": [
+    "developer",
+    "productivity",
+    "ai"
+  ],
+  "lang": "en",
+  "dir": "ltr"
+}

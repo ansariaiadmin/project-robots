@@ -29,7 +29,7 @@ class IntelligenceRobot(BaseRobot):
             metadata={"intelligence": intelligence.to_dict()},
         )
 
-    def plan(self, project: Path, config: dict) -> "Plan":
+    def plan(self, project: Path, config: dict) -> Plan:
         from robots.protocol import Plan
 
         return Plan(
@@ -38,7 +38,7 @@ class IntelligenceRobot(BaseRobot):
             risk_score=0.0,
         )
 
-    def execute(self, project: Path, plan: "Plan") -> RobotResult:
+    def execute(self, project: Path, plan: Plan) -> RobotResult:
         return self.inspect(project, {})
 
 
@@ -48,6 +48,7 @@ register_robot(IntelligenceRobot())
 
 if __name__ == "__main__":
     import sys
+
     from robots.common import resolve_project
 
     project = resolve_project(sys.argv[1] if len(sys.argv) > 1 else ".")

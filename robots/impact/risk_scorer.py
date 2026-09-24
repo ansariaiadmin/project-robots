@@ -5,10 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .static_reachability import ReachabilityResult
+from .contract_diff import ContractDiffResult
 from .mutation_engine import MutationResult
 from .property_fuzzer import PropertyResult
-from .contract_diff import ContractDiffResult
+from .static_reachability import ReachabilityResult
 
 
 @dataclass(slots=True)

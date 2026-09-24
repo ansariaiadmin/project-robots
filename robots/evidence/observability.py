@@ -57,7 +57,7 @@ class ObservabilityHooks:
         }
 
     @classmethod
-    def from_plan(cls, plan: dict) -> "ObservabilityHooks":
+    def from_plan(cls, plan: dict) -> ObservabilityHooks:
         """Generate observability hooks from a plan."""
         hooks = cls()
 

@@ -1,14 +1,14 @@
 """Robot Protocol Package."""
 
 from robots.protocol.protocol import (
-    Robot,
+    ROBOT_REGISTRY,
     BaseRobot,
-    RobotResult,
     Plan,
-    register_robot,
+    Robot,
+    RobotResult,
     get_robot,
     list_robots,
-    ROBOT_REGISTRY,
+    register_robot,
 )
 
 __all__ = [

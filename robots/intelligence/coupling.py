@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+import fnmatch
 import subprocess
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-import fnmatch
 from pathlib import Path
 
 

@@ -180,7 +180,7 @@ def parser() -> argparse.ArgumentParser:
 
     # Level 5 commands
     commands.add_parser("intelligence", help="Analyze repository architecture and dependencies.")
-    impact = commands.add_parser("impact", help="Simulate impact and compute risk score for changes.")
+    impact = commands.add_parser("impact")  # noqa: F841 # argparse side effect, help="Simulate impact and compute risk score for changes.")
     commands.add_parser("critique", help="Critique plan with senior-engineer heuristics.")
     auto = commands.add_parser("autonomous", help="Run autonomous sense-plan-critique-act-learn cycles.")
     auto.add_argument("--mode", choices=["oneshot", "continuous", "default"], default="default")

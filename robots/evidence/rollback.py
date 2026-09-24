@@ -78,7 +78,7 @@ class RollbackStrategy:
         return False
 
     @classmethod
-    def from_plan(cls, plan: dict) -> "RollbackStrategy":
+    def from_plan(cls, plan: dict) -> RollbackStrategy:
         """Generate rollback strategy from a plan."""
         risk_score = plan.get("risk_score", {}).get("overall", 0.0)
         changed_files = plan.get("changed_files", [])

@@ -1,7 +1,7 @@
 """Reflexion Package."""
 
-from robots.reflexion.critic import Critic, critique_plan, CritiqueFinding, CritiqueResult
-from robots.reflexion.refiner import Refiner, refine_plan, Refinement
+from robots.reflexion.critic import Critic, CritiqueFinding, CritiqueResult, critique_plan
+from robots.reflexion.refiner import Refinement, Refiner, refine_plan
 from robots.reflexion.robot import CritiqueRobot
 
 __all__ = [

@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import asdict, dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from robots.evidence.package import EvidencePackage
@@ -32,7 +32,7 @@ class LearningState:
     tool_effectiveness: dict[str, dict[str, float]] = field(default_factory=dict)
     false_positive_patterns: list[dict] = field(default_factory=list)
     false_negative_patterns: list[dict] = field(default_factory=list)
-    updated_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    updated_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 class LearningEngine:
@@ -60,7 +60,7 @@ class LearningEngine:
 
     def _save_state(self) -> None:
         """Save learning state to disk (central cache only)."""
-        self.state.updated_at = datetime.utcnow().isoformat()
+        self.state.updated_at = datetime.now(timezone.utc).isoformat()
         self.state_file.write_text(
             json.dumps(asdict(self.state), indent=2, default=str),
             encoding="utf-8",
@@ -74,7 +74,7 @@ class LearningEngine:
         """Append a single lesson to lessons.jsonl (append-only)."""
         lesson = dict(lesson)  # copy
         if "timestamp" not in lesson:
-            lesson["timestamp"] = datetime.utcnow().isoformat()
+            lesson["timestamp"] = datetime.now(timezone.utc).isoformat()
         if "id" not in lesson:
             import uuid
 
@@ -226,7 +226,7 @@ class LearningEngine:
                         {
                             "pattern": finding.get("category"),
                             "decision_id": evidence.decision_id,
-                            "timestamp": datetime.utcnow().isoformat(),
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
                         }
                     )
         else:
@@ -235,7 +235,7 @@ class LearningEngine:
                 self.state.false_negative_patterns.append(
                     {
                         "decision_id": evidence.decision_id,
-                        "timestamp": datetime.utcnow().isoformat(),
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
                     }
                 )
 

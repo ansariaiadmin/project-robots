@@ -1460,6 +1460,7 @@ class AutonomousRobot(BaseRobot):
         # --- Learning Loop: persist critic/reflexion lessons in lessons store JSON append-only ---
         try:
             from pathlib import Path
+
             from robots.autonomous.learning import create_learning_engine
 
             proj = project

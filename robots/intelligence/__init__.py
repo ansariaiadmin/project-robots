@@ -1,17 +1,17 @@
 """Repository Intelligence Package."""
 
-from robots.intelligence.graph_builder import build_import_graph, ImportGraphBuilder, ModuleNode, ImportEdge
 from robots.intelligence.architecture import (
-    detect_architecture,
     ArchitectureDetector,
     ArchitectureModel,
-    Layer,
     Boundary,
+    Layer,
+    detect_architecture,
 )
-from robots.intelligence.coupling import analyze_coupling, CouplingAnalyzer, CouplingMatrix, CouplingEntry
-from robots.intelligence.invariants import extract_invariants, InvariantExtractor, InvariantRegistry, Invariant
-from robots.intelligence.debt_index import analyze_debt, DebtAnalyzer, DebtIndex, FileMetrics
-from robots.intelligence.core import build_repository_intelligence, RepositoryIntelligence, get_intelligence_summary
+from robots.intelligence.core import RepositoryIntelligence, build_repository_intelligence, get_intelligence_summary
+from robots.intelligence.coupling import CouplingAnalyzer, CouplingEntry, CouplingMatrix, analyze_coupling
+from robots.intelligence.debt_index import DebtAnalyzer, DebtIndex, FileMetrics, analyze_debt
+from robots.intelligence.graph_builder import ImportEdge, ImportGraphBuilder, ModuleNode, build_import_graph
+from robots.intelligence.invariants import Invariant, InvariantExtractor, InvariantRegistry, extract_invariants
 from robots.intelligence.robot import IntelligenceRobot
 
 __all__ = [

@@ -217,7 +217,6 @@ class EvidenceHonestyTests(unittest.TestCase):
         from robots.evidence.package import EvidencePackage
         from robots.evidence.rollback import RollbackStrategy
         import hashlib
-        import json
 
         temp, project = _make_temp_project()
         try:
@@ -428,10 +427,6 @@ class LearningLoopTests(unittest.TestCase):
 
     def test_lesson_append_only(self):
         from robots.autonomous.learning import create_learning_engine
-        from robots.evidence.adr import ADR
-        from robots.evidence.observability import ObservabilityHooks
-        from robots.evidence.package import EvidencePackage
-        from robots.evidence.rollback import RollbackStrategy
 
         temp, project = _make_temp_project()
         try:
@@ -625,7 +620,7 @@ class IntelligenceCacheTests(unittest.TestCase):
         temp, project = _make_temp_project()
         try:
             # Build and cache
-            intelligence1 = build_repository_intelligence(project, {}, use_cache=True)
+            intelligence1 = build_repository_intelligence(project, {}, use_cache=True)  # noqa: F841
             cache_path = cache_dir(project, "intelligence") / "latest.json"
             self.assertTrue(cache_path.exists())
             cached = json.loads(cache_path.read_text(encoding="utf-8"))
@@ -642,7 +637,7 @@ class IntelligenceCacheTests(unittest.TestCase):
 
             # Now build with cache enabled — should be cache miss (rebuild)
             # We can detect miss by checking that cached file gets overwritten with new fingerprint
-            intelligence2 = build_repository_intelligence(project, {}, use_cache=True)
+            intelligence2 = build_repository_intelligence(project, {}, use_cache=True)  # noqa: F841
             cached2 = json.loads(cache_path.read_text(encoding="utf-8"))
             self.assertEqual(cached2["_git_fingerprint"], fp2)
         finally:
@@ -699,7 +694,7 @@ class ThrottleShallowTests(unittest.TestCase):
         temp, project = _make_temp_project()
         try:
             config, _ = load_config(project)
-            intelligence = build_repository_intelligence(project, config)
+            intelligence = build_repository_intelligence(project, config)  # noqa: F841
             robot = AutonomousRobot(AutonomousConfig(issue_queue=["test"]))
             brain = {
                 "provider": "mock",

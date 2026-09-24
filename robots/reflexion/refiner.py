@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from robots.reflexion.critic import CritiqueResult
 from robots.intelligence import RepositoryIntelligence
+from robots.reflexion.critic import CritiqueResult
 
 
 @dataclass(slots=True)

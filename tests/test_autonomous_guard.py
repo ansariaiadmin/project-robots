@@ -212,7 +212,7 @@ class LoopGuardTests(unittest.TestCase):
                 raise RuntimeError("boom")
 
         config, _ = load_config(self.project)
-        intelligence = build_repository_intelligence(self.project, config)
+        intelligence = build_repository_intelligence(self.project, config)  # noqa: F841
         robot = AutonomousRobot(AutonomousConfig(issue_queue=["fix"]))
         brain = {
             "provider": "mock", "model": "x", "tier": "tier-1-local",

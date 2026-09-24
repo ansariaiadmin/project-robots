@@ -8,7 +8,7 @@ import json
 import os
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from robots.evidence.adr import ADR
@@ -63,7 +63,7 @@ class EvidencePackage:
     rollback: RollbackStrategy
     observability: ObservabilityHooks = field(default_factory=ObservabilityHooks)
     adr: ADR = field(default_factory=lambda: ADR(id="", title="", status="proposed", context="", decision=""))
-    created_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     source_fingerprint: str = ""
     signature: str = ""
 

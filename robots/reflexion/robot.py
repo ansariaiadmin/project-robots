@@ -5,8 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 
 from robots.common import load_config, write_json
-from robots.protocol import BaseRobot, RobotResult, Plan, register_robot
 from robots.intelligence import build_repository_intelligence
+from robots.protocol import BaseRobot, Plan, RobotResult, register_robot
 from robots.reflexion.critic import critique_plan
 from robots.reflexion.refiner import refine_plan
 
@@ -168,6 +168,7 @@ register_robot(CritiqueRobot())
 
 if __name__ == "__main__":
     import sys
+
     from robots.common import resolve_project
 
     project = resolve_project(sys.argv[1] if len(sys.argv) > 1 else ".")

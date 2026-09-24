@@ -1,10 +1,10 @@
 """Tooling Package."""
 
-from robots.tooling.selector import ToolSelector, select_tools, ToolRecommendation
-from robots.tooling.ast_rewrite import ASTRewriter, rewrite_ast, RewriteResult
-from robots.tooling.semantic_patch import SemanticPatcher, apply_semantic_patch, PatchResult
-from robots.tooling.model_checker import ModelChecker, run_model_check, ModelCheckResult
-from robots.tooling.contract_tester import ContractTester, test_contracts, ContractTestResult
+from robots.tooling.ast_rewrite import ASTRewriter, RewriteResult, rewrite_ast
+from robots.tooling.contract_tester import ContractTester, ContractTestResult, test_contracts
+from robots.tooling.model_checker import ModelChecker, ModelCheckResult, run_model_check
+from robots.tooling.selector import ToolRecommendation, ToolSelector, select_tools
+from robots.tooling.semantic_patch import PatchResult, SemanticPatcher, apply_semantic_patch
 
 __all__ = [
     "ToolSelector",

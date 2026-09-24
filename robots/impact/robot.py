@@ -5,13 +5,13 @@ from __future__ import annotations
 from pathlib import Path
 
 from robots.common import load_config, write_json
-from robots.protocol import BaseRobot, RobotResult, Plan, register_robot
-from robots.intelligence import build_repository_intelligence
-from robots.impact.static_reachability import analyze_reachability, ReachabilityAnalyzer
+from robots.impact.contract_diff import analyze_contract_diff
 from robots.impact.mutation_engine import run_mutation_testing
 from robots.impact.property_fuzzer import run_property_fuzzing
-from robots.impact.contract_diff import analyze_contract_diff
-from robots.impact.risk_scorer import compute_risk_score, RiskScorer
+from robots.impact.risk_scorer import RiskScorer, compute_risk_score
+from robots.impact.static_reachability import ReachabilityAnalyzer, analyze_reachability
+from robots.intelligence import build_repository_intelligence
+from robots.protocol import BaseRobot, Plan, RobotResult, register_robot
 
 
 class ImpactRobot(BaseRobot):
@@ -120,6 +120,7 @@ register_robot(ImpactRobot())
 
 if __name__ == "__main__":
     import sys
+
     from robots.common import resolve_project
 
     project = resolve_project(sys.argv[1] if len(sys.argv) > 1 else ".")

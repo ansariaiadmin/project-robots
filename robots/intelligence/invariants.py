@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import fnmatch
 import json
 import re
 from dataclasses import dataclass, field
-import fnmatch
 from pathlib import Path
 
 

@@ -42,7 +42,7 @@ class CritiqueHandoffTests(unittest.TestCase):
             from robots.intelligence import build_repository_intelligence
 
             config, _ = load_config(project)
-            intelligence = build_repository_intelligence(project, config)
+            intelligence = build_repository_intelligence(project, config)  # noqa: F841
             # Stale file contains a benign plan; in-memory plan masks symptoms.
             stale = {"issue": "stale", "steps": [{"action": "refactor", "target": "x"}],
                      "changes": []}

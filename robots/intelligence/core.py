@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 
-from .graph_builder import build_import_graph, ModuleNode
-from .architecture import detect_architecture, ArchitectureModel
-from .coupling import analyze_coupling, CouplingMatrix
-from .invariants import extract_invariants, InvariantRegistry
-from .debt_index import analyze_debt, DebtIndex
+from .architecture import ArchitectureModel, detect_architecture
+from .coupling import CouplingMatrix, analyze_coupling
+from .debt_index import DebtIndex, analyze_debt
+from .graph_builder import ModuleNode, build_import_graph
+from .invariants import InvariantRegistry, extract_invariants
 
 
 @dataclass(slots=True)
@@ -21,7 +22,7 @@ class RepositoryIntelligence:
     coupling: CouplingMatrix
     invariants: InvariantRegistry
     debt_index: DebtIndex
-    generated_at: str = field(default_factory=lambda: __import__("datetime").datetime.utcnow().isoformat())
+    generated_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
     def to_dict(self) -> dict:
         """Serialize to dictionary for caching."""
@@ -103,12 +104,12 @@ class RepositoryIntelligence:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "RepositoryIntelligence":
+    def from_dict(cls, data: dict) -> RepositoryIntelligence:
         """Deserialize from dictionary."""
         # Reconstruct import graph
         import_graph = {}
         for path, node_data in data.get("import_graph", {}).items():
-            from .graph_builder import ModuleNode, ImportEdge
+            from .graph_builder import ImportEdge, ModuleNode
 
             imports = [ImportEdge(**e) for e in node_data.get("imports", [])]
             node = ModuleNode(
@@ -120,7 +121,7 @@ class RepositoryIntelligence:
             import_graph[path] = node
 
         # Reconstruct architecture
-        from .architecture import ArchitectureModel, Layer, Boundary
+        from .architecture import ArchitectureModel, Boundary, Layer
 
         arch_data = data.get("architecture", {})
         # Handle Boundary serialization where 'from'/'to' are used instead of 'from_layer'/'to_layer'
@@ -142,7 +143,7 @@ class RepositoryIntelligence:
         )
 
         # Reconstruct coupling
-        from .coupling import CouplingMatrix, CouplingEntry
+        from .coupling import CouplingEntry, CouplingMatrix
 
         coup_data = data.get("coupling", {})
         coupling = CouplingMatrix(
@@ -154,7 +155,7 @@ class RepositoryIntelligence:
         )
 
         # Reconstruct invariants
-        from .invariants import InvariantRegistry, Invariant
+        from .invariants import Invariant, InvariantRegistry
 
         inv_data = data.get("invariants", {})
         invariants = InvariantRegistry(
@@ -221,9 +222,10 @@ def build_repository_intelligence(
     use_cache: bool = True,
 ) -> RepositoryIntelligence:
     """Build complete repository intelligence model with git fingerprint invalidation."""
-    from robots.common import cache_dir
     import json
     import time
+
+    from robots.common import cache_dir
 
     cache_path = cache_dir(project, "intelligence") / "latest.json"
 
@@ -286,15 +288,16 @@ def build_repository_intelligence(
 
     # Cache result with git fingerprint
     try:
-        from robots.common import cache_dir
         import json
+
+        from robots.common import cache_dir
 
         fingerprint = _get_git_fingerprint(project)
         cache_dir_path = cache_dir(project, "intelligence")
         cache_dir_path.mkdir(parents=True, exist_ok=True)
         payload = {
             "_git_fingerprint": fingerprint,
-            "_cached_at": __import__("datetime").datetime.utcnow().isoformat(),
+            "_cached_at": datetime.now(timezone.utc).isoformat(),
             "intelligence": intelligence.to_dict(),
         }
         # Also store fingerprint separately for debugging

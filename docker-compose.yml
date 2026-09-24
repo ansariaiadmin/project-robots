@@ -1,0 +1,20 @@
+version: '3.9'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: project-robots:latest
+    volumes:
+      - .:/app
+      - /app/.venv
+      - /app/__pycache__
+    environment:
+      PYTHONPATH: .
+    command: ["python", "project_robots.py", "--help"]
+    healthcheck:
+      test: ["CMD", "python", "-m", "pytest", "-q", "--collect-only"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s

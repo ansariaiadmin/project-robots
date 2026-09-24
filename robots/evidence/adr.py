@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
 
@@ -20,7 +20,7 @@ class ADR:
     alternatives: list[str] = field(default_factory=list)
     consequences: dict[str, list[str]] = field(default_factory=lambda: {"positive": [], "negative": [], "neutral": []})
     links: list[str] = field(default_factory=list)
-    created: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    created: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     supersedes: str | None = None
     superseded_by: str | None = None
 

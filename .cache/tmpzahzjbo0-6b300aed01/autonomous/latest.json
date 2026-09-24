@@ -1,0 +1,14 @@
+{
+  "mode": "continuous",
+  "cycles": 1,
+  "results": [
+    {
+      "cycle_id": "cycle-0000-0bb00e3d",
+      "issue": "solo",
+      "success": true,
+      "evidence_id": "cycle-0000-0bb00e3d",
+      "error": null
+    }
+  ],
+  "remaining_issues": 0
+}

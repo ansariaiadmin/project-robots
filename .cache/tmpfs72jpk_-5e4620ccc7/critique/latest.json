@@ -1,0 +1,26 @@
+{
+  "original_plan": {
+    "issue": "standalone",
+    "steps": [],
+    "changes": []
+  },
+  "critique": {
+    "passed": true,
+    "severity": 0.03,
+    "findings": [
+      {
+        "severity": "minor",
+        "category": "adr_quality",
+        "message": "No architectural decision record provided",
+        "file": "",
+        "line": 0,
+        "suggestion": "Add ADR with context, decision, alternatives, and consequences"
+      }
+    ],
+    "required_changes": [
+      "Add ADR with context, decision, alternatives, and consequences"
+    ],
+    "summary": "Plan passes all critique heuristics."
+  },
+  "refined_plan": null
+}

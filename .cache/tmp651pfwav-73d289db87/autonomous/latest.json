@@ -1,0 +1,14 @@
+{
+  "mode": "continuous",
+  "cycles": 1,
+  "results": [
+    {
+      "cycle_id": "cycle-0000-ec5b4132",
+      "issue": "p1",
+      "success": true,
+      "evidence_id": "cycle-0000-ec5b4132",
+      "error": null
+    }
+  ],
+  "remaining_issues": 2
+}

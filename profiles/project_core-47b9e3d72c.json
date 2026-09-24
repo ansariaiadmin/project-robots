@@ -1,0 +1,216 @@
+{
+  "version": 1,
+  "name": "PROJECT_CORE",
+  "requiredDocs": [
+    "AGENTS.md",
+    "docs/MASTER.md"
+  ],
+  "readFirst": [
+    "AGENTS.md",
+    "docs/MASTER.md"
+  ],
+  "invariants": [],
+  "routes": [
+    {
+      "name": "docs",
+      "keywords": [
+        "docs",
+        "documentation",
+        "roadmap",
+        "module"
+      ],
+      "patterns": [
+        "docs/**",
+        "*.md",
+        "AGENTS.md"
+      ],
+      "readFirst": [
+        "AGENTS.md",
+        "docs/MASTER.md"
+      ],
+      "checks": [
+        "test:docs",
+        "lint"
+      ],
+      "invariants": [
+        "Documentation must match current source behavior."
+      ]
+    },
+    {
+      "name": "ui",
+      "keywords": [
+        "ui",
+        "ux",
+        "interface",
+        "frontend",
+        "layout"
+      ],
+      "patterns": [
+        "src/pages/**",
+        "src/components/**",
+        "src/ui/**",
+        "src/styles/**",
+        "app/**",
+        "pages/**",
+        "components/**"
+      ],
+      "readFirst": [
+        "AGENTS.md",
+        "docs/MASTER.md"
+      ],
+      "checks": [
+        "lint",
+        "test:layout"
+      ],
+      "invariants": []
+    },
+    {
+      "name": "core",
+      "keywords": [
+        "core",
+        "logic",
+        "backend",
+        "service",
+        "storage",
+        "data"
+      ],
+      "patterns": [
+        "src/services/**",
+        "src/storage/**",
+        "src/data/**",
+        "lib/**",
+        "server/**",
+        "backend/**",
+        "tests/**"
+      ],
+      "readFirst": [
+        "AGENTS.md",
+        "docs/MASTER.md"
+      ],
+      "checks": [
+        "lint",
+        "test:core"
+      ],
+      "invariants": []
+    },
+    {
+      "name": "release",
+      "keywords": [
+        "release",
+        "deploy",
+        "package",
+        "docker",
+        "ci",
+        "build"
+      ],
+      "patterns": [
+        "Dockerfile",
+        "docker/**",
+        ".github/**",
+        "scripts/release/**",
+        "scripts/deploy/**",
+        "scripts/package*",
+        "package.json",
+        "package-lock.json",
+        "pyproject.toml"
+      ],
+      "readFirst": [
+        "AGENTS.md",
+        "docs/MASTER.md"
+      ],
+      "checks": [
+        "lint",
+        "build:offline",
+        "build",
+        "test:release"
+      ],
+      "invariants": []
+    },
+    {
+      "name": "automation",
+      "keywords": [
+        "automation",
+        "robot",
+        "agent",
+        "tool",
+        "script"
+      ],
+      "patterns": [
+        "scripts/**",
+        "tools/**",
+        "package.json",
+        "pyproject.toml"
+      ],
+      "readFirst": [
+        "AGENTS.md",
+        "docs/MASTER.md"
+      ],
+      "checks": [
+        "lint"
+      ],
+      "invariants": [
+        "Generated evidence must stay outside product source."
+      ]
+    }
+  ],
+  "checks": {
+    "diff": [
+      "git",
+      "diff",
+      "--check",
+      "--",
+      "."
+    ],
+    "test:docs": [
+      "npm",
+      "run",
+      "test:docs"
+    ],
+    "lint": [
+      "npm",
+      "run",
+      "lint"
+    ],
+    "check": [
+      "npm",
+      "run",
+      "check"
+    ],
+    "test:core": [
+      "npm",
+      "run",
+      "test:core"
+    ],
+    "build": [
+      "npm",
+      "run",
+      "build"
+    ],
+    "build:offline": [
+      "npm",
+      "run",
+      "build:offline"
+    ],
+    "test:release": [
+      "npm",
+      "run",
+      "test:release"
+    ],
+    "test:layout": [
+      "npm",
+      "run",
+      "test:layout"
+    ],
+    "test:browser": [
+      "npm",
+      "run",
+      "test:browser"
+    ]
+  },
+  "limits": {
+    "contextTokenBudget": 4000,
+    "maxFindings": 40,
+    "commandTimeoutSeconds": 900,
+    "outputTailLines": 30
+  }
+}

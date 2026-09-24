@@ -1,0 +1,35 @@
+{
+  "issue": "p1",
+  "rationale": "t",
+  "steps": [
+    {
+      "action": "root_cause_analysis",
+      "target": "issue",
+      "description": "Perform root cause analysis before implementing fix"
+    },
+    {
+      "action": "handle_error",
+      "target": "x",
+      "description": "Replace error suppression with explicit handling"
+    }
+  ],
+  "changes": [
+    {
+      "file": "src/app.py",
+      "description": "patch",
+      "path": "src/app.py"
+    }
+  ],
+  "risk_score": {
+    "overall": 0.0
+  },
+  "decision_id": "cycle-0000-f3bd85bb",
+  "context_chunks": [],
+  "target_cleanup": {
+    "moved": [],
+    "left": [],
+    "removed": false
+  },
+  "adr": {},
+  "refinements_applied": 1
+}

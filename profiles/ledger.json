@@ -1,0 +1,9 @@
+{
+  "balance_usd": 0.0,
+  "target_hardware": {
+    "item": "1TB NVMe PCIe 4.0 SSD",
+    "cost_usd": 85.0,
+    "achieved": false
+  },
+  "transactions": []
+}

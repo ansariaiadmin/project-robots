@@ -1,0 +1,28 @@
+{
+  "mode": "continuous",
+  "cycles": 3,
+  "results": [
+    {
+      "cycle_id": "cycle-0000-9e18d94a",
+      "issue": "p1",
+      "success": true,
+      "evidence_id": "cycle-0000-9e18d94a",
+      "error": null
+    },
+    {
+      "cycle_id": "cycle-0001-f77a6af4",
+      "issue": "p2",
+      "success": true,
+      "evidence_id": "cycle-0001-f77a6af4",
+      "error": null
+    },
+    {
+      "cycle_id": "cycle-0002-d45bf8a3",
+      "issue": "f1",
+      "success": true,
+      "evidence_id": "cycle-0002-d45bf8a3",
+      "error": null
+    }
+  ],
+  "remaining_issues": 0
+}

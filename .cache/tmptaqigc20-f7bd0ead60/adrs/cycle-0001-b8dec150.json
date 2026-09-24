@@ -1,0 +1,17 @@
+{
+  "id": "cycle-0001-b8dec150",
+  "title": "Automated Decision",
+  "status": "accepted",
+  "context": "b",
+  "decision": "Mock offline plan: inspect impact analysis and verify with checks.",
+  "alternatives": [],
+  "consequences": {
+    "positive": [],
+    "negative": [],
+    "neutral": []
+  },
+  "links": [],
+  "created": "2026-09-05T21:03:39.375186",
+  "supersedes": null,
+  "superseded_by": null
+}

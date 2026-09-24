@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "name": "example-project",
+  "requiredDocs": [
+    "README.md"
+  ],
+  "readFirst": [
+    "AGENTS.md",
+    "README.md"
+  ],
+  "invariants": [
+    "Source and tests outrank prose."
+  ],
+  "routes": [
+    {
+      "name": "ui",
+      "patterns": [
+        "src/pages/**",
+        "src/components/**",
+        "src/styles/**"
+      ],
+      "readFirst": [
+        "docs/UI.md"
+      ],
+      "checks": [
+        "lint",
+        "test:layout"
+      ],
+      "invariants": [
+        "Responsive and keyboard behavior must be verified."
+      ]
+    }
+  ],
+  "checks": {
+    "diff": [
+      "git",
+      "diff",
+      "--check",
+      "--",
+      "."
+    ],
+    "lint": [
+      "npm",
+      "run",
+      "lint"
+    ],
+    "test": [
+      "npm",
+      "test"
+    ]
+  },
+  "limits": {
+    "maxFileBytes": 2000000,
+    "maxFindings": 40,
+    "contextTokenBudget": 4000,
+    "commandTimeoutSeconds": 900,
+    "outputTailLines": 30
+  }
+}

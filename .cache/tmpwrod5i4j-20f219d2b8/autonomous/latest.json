@@ -1,0 +1,21 @@
+{
+  "mode": "continuous",
+  "cycles": 2,
+  "results": [
+    {
+      "cycle_id": "cycle-0000-35a422a8",
+      "issue": "a",
+      "success": true,
+      "evidence_id": "cycle-0000-35a422a8",
+      "error": null
+    },
+    {
+      "cycle_id": "cycle-0001-60965b0e",
+      "issue": "b",
+      "success": true,
+      "evidence_id": "cycle-0001-60965b0e",
+      "error": null
+    }
+  ],
+  "remaining_issues": 1
+}

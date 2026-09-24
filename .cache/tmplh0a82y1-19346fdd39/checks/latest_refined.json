@@ -1,0 +1,36 @@
+{
+  "issue": "critical block test",
+  "rationale": "test",
+  "steps": [
+    {
+      "action": "root_cause_analysis",
+      "target": "issue",
+      "description": "Perform root cause analysis before implementing fix"
+    },
+    {
+      "action": "handle_error",
+      "target": "x",
+      "description": "Replace error suppression with explicit handling"
+    }
+  ],
+  "changes": [
+    {
+      "file": "src/app.py",
+      "path": "src/app.py",
+      "type": "fix",
+      "description": "patch"
+    }
+  ],
+  "risk_score": {
+    "overall": 0.0
+  },
+  "decision_id": "cycle-0000-6c2ed361",
+  "context_chunks": [],
+  "target_cleanup": {
+    "moved": [],
+    "left": [],
+    "removed": false
+  },
+  "adr": {},
+  "refinements_applied": 1
+}

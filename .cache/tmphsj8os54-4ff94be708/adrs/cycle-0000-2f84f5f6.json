@@ -1,0 +1,17 @@
+{
+  "id": "cycle-0000-2f84f5f6",
+  "title": "Automated Decision",
+  "status": "accepted",
+  "context": "p1",
+  "decision": "t",
+  "alternatives": [],
+  "consequences": {
+    "positive": [],
+    "negative": [],
+    "neutral": []
+  },
+  "links": [],
+  "created": "2026-09-05T21:04:59.825398",
+  "supersedes": null,
+  "superseded_by": null
+}

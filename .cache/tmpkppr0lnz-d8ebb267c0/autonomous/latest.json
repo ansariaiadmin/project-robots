@@ -1,0 +1,28 @@
+{
+  "mode": "continuous",
+  "cycles": 3,
+  "results": [
+    {
+      "cycle_id": "cycle-0000-69c9c6a0",
+      "issue": "a",
+      "success": true,
+      "evidence_id": "cycle-0000-69c9c6a0",
+      "error": null
+    },
+    {
+      "cycle_id": "cycle-0001-02a5dcde",
+      "issue": "b",
+      "success": true,
+      "evidence_id": "cycle-0001-02a5dcde",
+      "error": null
+    },
+    {
+      "cycle_id": "cycle-0002-254746e8",
+      "issue": "c",
+      "success": true,
+      "evidence_id": "cycle-0002-254746e8",
+      "error": null
+    }
+  ],
+  "remaining_issues": 0
+}
